@@ -1,0 +1,138 @@
+AWSTemplateFormatVersion: 2010-09-09
+Parameters:
+  KeyNameParam:
+    Description: Key Pair Name
+    Type: 'AWS::EC2::KeyPair::KeyName'
+  WebAPAmiIDParam:
+    Description: AMI ID for WebAP Server
+    Type: String
+    Default: ami-068a6cefc24c301d2
+  InstanceTypeParam:
+    Type: String
+    Default: t2.micro
+    AllowedValues:
+      - t2.micro
+      - m1.small
+      - m1.large
+    Description: 'Enter t2.micro, m1.small, or m1.large. Default is t2.micro.'
+  NRLicParam:
+    Type: String
+    Description: Enter New Relic License Key
+  ApplicationNameParam:
+    Type: String
+    Description: Application Name
+  ApplicationJarParam:
+    Type: String
+    Description: S3 path for application jar
+  ManagedS3AccessIAMRoleParam:
+    Type: String
+    Description: Managed IAM Role ARN to access s3 from ec2
+Resources:
+  InternetGateway:
+    Type: 'AWS::EC2::InternetGateway'
+    Properties: {}
+  VPC:
+    Type: 'AWS::EC2::VPC'
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsHostnames: 'true'
+  VPCGatewayAttachment:
+    Type: 'AWS::EC2::VPCGatewayAttachment'
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
+  PublicRouteTableAssociation:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      RouteTableId: !Ref SubnetRouteTable
+      SubnetId: !Ref Subnet
+  SecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      VpcId: !Ref VPC
+      GroupDescription: Security Group for WebAP
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 8080
+          ToPort: 8080
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+  WebAP:
+    Type: 'AWS::EC2::Instance'
+    Properties:
+      ImageId: !Ref WebAPAmiIDParam
+      InstanceType: !Ref InstanceTypeParam
+      KeyName: !Ref KeyNameParam
+      IamInstanceProfile: !Ref S3AccessInstanceProfile
+      NetworkInterfaces:
+        - AssociatePublicIpAddress: 'true'
+          DeviceIndex: '0'
+          GroupSet:
+            - !Ref SecurityGroup
+          SubnetId: !Ref Subnet
+      UserData:
+        'Fn::Base64': !Sub >
+          #!/bin/bash
+
+
+          # APM Agent
+
+          rm -rf /opt/newrelic
+
+          mkdir /opt/newrelic
+
+          curl -o /opt/newrelic/newrelic.jar https://download.newrelic.com/newrelic/java-agent/newrelic-agent/current/newrelic.jar
+
+          curl -o /opt/newrelic/newrelic.yml https://download.newrelic.com/newrelic/java-agent/newrelic-agent/current/newrelic.yml
+
+          sed -i -e "s/app_name: My Application$/app_name: ${ApplicationNameParam}/" /opt/newrelic/newrelic.yml
+
+          #mv /opt/newrelic/newrelic.yml.bak /opt/newrelic/newrelic.yml
+
+          sed -i -e "s/<%= license_key %>/${NRLicParam}/" /opt/newrelic/newrelic.yml
+
+          #mv /opt/newrelic/newrelic.yml.bak /opt/newrelic/newrelic.yml
+
+
+          # Application Install
+
+          yum install java-1.8.0-openjdk-devel -y
+
+          rm -rf /opt/petclinic
+
+          mkdir /opt/petclinic
+
+          aws s3 cp ${ApplicationJarParam} /opt/petclinic/.
+
+          java -javaagent:/opt/newrelic/newrelic.jar -jar /opt/petclinic/*.jar
+  Subnet:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.0.0/24
+  SubnetRouteTable:
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref VPC
+  IGWRouteTable:
+    Type: 'AWS::EC2::Route'
+    Properties:
+      RouteTableId: !Ref SubnetRouteTable
+      GatewayId: !Ref InternetGateway
+      DestinationCidrBlock: 0.0.0.0/0
+    DependsOn:
+      - VPCGatewayAttachment
+  S3AccessInstanceProfile:
+    Type: 'AWS::IAM::InstanceProfile'
+    Properties:
+      Path: /
+      Roles:
+        - !Ref ManagedS3AccessIAMRoleParam
+Outputs:
+  WebAPDNSName:
+    Description: The DNSName of the WebAP Server
+    Value: !GetAtt WebAP.PublicDnsName
+
