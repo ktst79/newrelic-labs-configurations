@@ -78,6 +78,18 @@ Resources:
           #!/bin/bash
 
 
+          # Infrastructure Agent
+
+          curl -o /etc/yum.repos.d/newrelic-infra.repo https://download.newrelic.com/infrastructure_agent/linux/yum/el/7/x86_64/newrelic-infra.repo
+
+          yum -q makecache -y --disablerepo='*' --enablerepo='newrelic-infra'
+
+          yum install newrelic-infra -y
+
+          echo "license_key: ${NRLicParam}" > /etc/newrelic-infra.yml
+
+          systemctl restart newrelic-infra
+
           # APM Agent
 
           rm -rf /opt/newrelic
@@ -90,12 +102,7 @@ Resources:
 
           sed -i -e "s/app_name: My Application$/app_name: ${ApplicationNameParam}/" /opt/newrelic/newrelic.yml
 
-          #mv /opt/newrelic/newrelic.yml.bak /opt/newrelic/newrelic.yml
-
           sed -i -e "s/<%= license_key %>/${NRLicParam}/" /opt/newrelic/newrelic.yml
-
-          #mv /opt/newrelic/newrelic.yml.bak /opt/newrelic/newrelic.yml
-
 
           # Application Install
 

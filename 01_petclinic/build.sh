@@ -16,82 +16,93 @@ fi
 
 . ./build_param.sh
 
-while getopts p:b: OPT
+OVERWRITEAPP=false
+while getopts p:b:o OPT
 do
     case $OPT in
         # Check if parameters need to be retrieved from specified file or keep default file (build_param.sh)
-        p) echo "Retrieving parameters from ${PARAM_FILE}"
+        p) echo "Retrieving parameters from ${OPTARG}"
            . $OPTARG
            ;;
         # Check if browser agent needs to be read from file
         b) echo "Browser agent code will be added to the html"
            AGT_JS="${OPTARG}"
            ;;
+        # Check if download application and overwrite
+        o) echo "Download brand-new application and replace old one with new one"
+           OVERWRITEAPP=true
     esac
 done
 
 if [ "${NR_LICENSEKEY}" = "" ] ; then
- echo 'NR_LICENSEKEY are not specified. Check build_param.sh'
- exit 1
+    echo 'NR_LICENSEKEY are not specified. Check build_param.sh'
+    exit 1
 fi
 
 if [ "${NR_APP_NAME}" = "" ] ; then
- echo 'NR_APP_NAME are not specified. Check build_param.sh'
- exit 1
+    echo 'NR_APP_NAME are not specified. Check build_param.sh'
+    exit 1
 fi
 
 if [ "${AWS_KEY_NAME}" = "" ] ; then
- echo 'AWS_KEY_NAME are not specified. Check build_param.sh'
- exit 1
+    echo 'AWS_KEY_NAME are not specified. Check build_param.sh'
+    exit 1
 fi
 
 if [ "${AWS_S3_PATH}" = "" ] ; then
- echo 'AWS_S3_PATH are not specified. Check build_param.sh'
- exit 1
+    echo 'AWS_S3_PATH are not specified. Check build_param.sh'
+    exit 1
 fi
 
 if [ "${AWS_AMIROLE_S3ACCESS}" = "" ] ; then
- echo 'AWS_AMIROLE_S3ACCESS are not specified. Check build_param.sh'
- exit 1
+    echo 'AWS_AMIROLE_S3ACCESS are not specified. Check build_param.sh'
+    exit 1
 fi
 
 if [ "${AWS_CF_STACK}" = "" ] ; then
- echo 'AWS_CF_STACK are not specified. Check build_param.sh'
- exit 1
+    echo 'AWS_CF_STACK are not specified. Check build_param.sh'
+    exit 1
 fi
 
 if [ "${AWS_CF_TEMPLATE}" = "" ] ; then
- echo 'AWS_CF_TEMPLATE are not specified. Check build_param.sh'
- exit 1
+    echo 'AWS_CF_TEMPLATE are not specified. Check build_param.sh'
+    exit 1
 fi
 
 if [ "${AWS_AP_AMIID}" = "" ] ; then
- echo 'AWS_AP_AMIID are not specified. Check build_param.sh'
- exit 1
+    echo 'AWS_AP_AMIID are not specified. Check build_param.sh'
+    exit 1
 fi
 
 if [ "${AWS_AP_INSTANCETYPE}" = "" ] ; then
- echo 'AWS_AP_INSTANCETYPE are not specified. Check build_param.sh'
- exit 1
+    echo 'AWS_AP_INSTANCETYPE are not specified. Check build_param.sh'
+    exit 1
 fi
 
 if [ "${APP_URL}" = "" ] ; then
- echo 'APP_URL are not specified. Check build_param.sh'
- exit 1
+    echo 'APP_URL are not specified. Check build_param.sh'
+    exit 1
 fi
 
 if [ "${APP_NAME}" = "" ] ; then
- echo 'APP_NAME are not specified. Check build_param.sh'
- exit 1
+    echo 'APP_NAME are not specified. Check build_param.sh'
+    exit 1
 fi
 
-echo "Downloading application"
+if [ ! -e ${APP_DIR} ]; then
+    echo "There is no folder '${APP_DIR}', so download application forcibly"
+    OVERWRITEAPP=true
+fi
+
 APP_DIR=app
-rm -rf ${APP_DIR}
-curl -L -o ./app.zip ${APP_URL}
-unzip ./app.zip -d .
-mv ${APP_NAME} ${APP_DIR}
-rm ./app.zip
+if $OVERWRITEAPP ; then
+    echo "Downloading application"
+    rm -rf ${APP_DIR}
+    curl -L -o ./app.zip ${APP_URL}
+    unzip ./app.zip -d .
+    mv ${APP_NAME} ${APP_DIR}
+    rm ./app.zip
+fi
 
 if [ "${AGT_JS}" != "" ] ; then
     echo "Embeddig Browser Agent"
