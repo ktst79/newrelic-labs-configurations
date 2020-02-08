@@ -1,0 +1,238 @@
+AWSTemplateFormatVersion: 2010-09-09
+Parameters:
+  KeyNameParam:
+    Description: Key Pair Name
+    Type: 'AWS::EC2::KeyPair::KeyName'
+  WebAPAmiIDParam:
+    Description: AMI ID for WebAP Server
+    Type: String
+    Default: ami-068a6cefc24c301d2
+  InstanceTypeParam:
+    Description: 'Enter instance type'
+    Type: String
+    Default: t2.micro
+  NRLicParam:
+    Type: String
+    Description: Enter New Relic License Key
+    NoEcho: true
+  ApplicationNameParam:
+    Type: String
+    Description: Application Name
+  ApplicationJarParam:
+    Type: String
+    Description: S3 path for application jar
+  ManagedS3AccessIAMRoleParam:
+    Type: String
+    Description: Managed IAM Role ARN to access s3 from ec2
+  MySQLMajorVersionParam:
+    Type: String
+    Default: '5.7'
+    AllowedValues:
+      - '5.5'
+      - '5.6'
+      - '5.7'
+  MySQLMinorVersionParam:
+    Type: String
+    Default: '22'
+  DBInstanceClassParam:
+    Type: String
+    Default: db.t2.micro
+  DBInstanceStorageSizeParam:
+    Type: String
+    Default: '20'
+  DBInstanceStorageTypeParam:
+    Type: String
+    Default: gp2
+  DBNameParam:
+    Type: String
+    Default: db
+  DBMasterUserNameParam:
+    Type: String
+    Default: master
+    NoEcho: true
+    MinLength: 1
+    MaxLength: 16
+    AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*'
+    ConstraintDescription: must begin with a letter and contain only alphanumeric characters.
+  DBPasswordParam:
+    Default: password
+    NoEcho: true
+    Type: String
+    MinLength: 8
+    MaxLength: 41
+    AllowedPattern: '[a-zA-Z0-9]*'
+    ConstraintDescription: must contain only alphanumeric characters.
+Resources:
+  InternetGateway:
+    Type: 'AWS::EC2::InternetGateway'
+    Properties: {}
+  VPC:
+    Type: 'AWS::EC2::VPC'
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsHostnames: 'true'
+  VPCGatewayAttachment:
+    Type: 'AWS::EC2::VPCGatewayAttachment'
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
+  PublicRouteTableAssociation:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      RouteTableId: !Ref SubnetRouteTable
+      SubnetId: !Ref SubnetA
+  SecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      VpcId: !Ref VPC
+      GroupDescription: Security Group for WebAP
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 8080
+          ToPort: 8080
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+  WebAP:
+    Type: 'AWS::EC2::Instance'
+    Properties:
+      ImageId: !Ref WebAPAmiIDParam
+      InstanceType: !Ref InstanceTypeParam
+      KeyName: !Ref KeyNameParam
+      IamInstanceProfile: !Ref S3AccessInstanceProfile
+      NetworkInterfaces:
+        - AssociatePublicIpAddress: 'true'
+          DeviceIndex: '0'
+          GroupSet:
+            - !Ref SecurityGroup
+          SubnetId: !Ref SubnetA
+      UserData: !Base64 
+        'Fn::Sub': >
+          #!/bin/bash
+
+
+          # Infrastructure Agent
+
+          curl -o /etc/yum.repos.d/newrelic-infra.repo
+          https://download.newrelic.com/infrastructure_agent/linux/yum/el/7/x86_64/newrelic-infra.repo
+
+          yum -q makecache -y --disablerepo='*' --enablerepo='newrelic-infra'
+
+          yum install newrelic-infra -y
+
+          echo "license_key: ${NRLicParam}" > /etc/newrelic-infra.yml
+
+          systemctl restart newrelic-infra
+
+          # APM Agent
+
+          rm -rf /opt/newrelic
+
+          mkdir /opt/newrelic
+
+          curl -o /opt/newrelic/newrelic.jar
+          https://download.newrelic.com/newrelic/java-agent/newrelic-agent/current/newrelic.jar
+
+          curl -o /opt/newrelic/newrelic.yml
+          https://download.newrelic.com/newrelic/java-agent/newrelic-agent/current/newrelic.yml
+
+          sed -i -e "s/app_name: My Application$/app_name:
+          ${ApplicationNameParam}/" /opt/newrelic/newrelic.yml
+
+          sed -i -e "s/<%= license_key %>/${NRLicParam}/"
+          /opt/newrelic/newrelic.yml
+
+          # Application Install
+
+          yum install java-1.8.0-openjdk-devel -y
+
+          rm -rf /opt/petclinic
+
+          mkdir /opt/petclinic
+
+          aws s3 cp ${ApplicationJarParam} /opt/petclinic/.
+
+          java -javaagent:/opt/newrelic/newrelic.jar -jar
+          -Dspring.profiles.active=mysql
+          -Dspring.datasource.url=jdbc:mysql://${RDS.Endpoint.Address}/${DBNameParam}
+          -Dspring.datasource.username=${DBMasterUserNameParam}
+          -Dspring.datasource.password=${DBPasswordParam} /opt/petclinic/*.jar
+    DependsOn:
+      - RDS
+  SubnetRouteTable:
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref VPC
+  IGWRouteTable:
+    Type: 'AWS::EC2::Route'
+    Properties:
+      RouteTableId: !Ref SubnetRouteTable
+      GatewayId: !Ref InternetGateway
+      DestinationCidrBlock: 0.0.0.0/0
+  S3AccessInstanceProfile:
+    Type: 'AWS::IAM::InstanceProfile'
+    Properties:
+      Path: /
+      Roles:
+        - !Ref ManagedS3AccessIAMRoleParam
+  RDS:
+    Type: 'AWS::RDS::DBInstance'
+    Properties:
+      Engine: MySQL
+      EngineVersion: !Sub '${MySQLMajorVersionParam}.${MySQLMinorVersionParam}'
+      DBInstanceClass: !Ref DBInstanceClassParam
+      AllocatedStorage: !Ref DBInstanceStorageSizeParam
+      StorageType: !Ref DBInstanceStorageTypeParam
+      DBName: !Ref DBNameParam
+      MasterUsername: !Ref DBMasterUserNameParam
+      MasterUserPassword: !Ref DBPasswordParam
+      PubliclyAccessible: false
+      MultiAZ: false
+      AvailabilityZone: ap-northeast-1a
+      AutoMinorVersionUpgrade: false
+      VPCSecurityGroups:
+        - !Ref RDSSecurityGroup
+      DBSubnetGroupName: !Ref RDSSubnetGroup
+  RDSSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: Security Group for RDS
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '3306'
+          ToPort: '3306'
+          SourceSecurityGroupId:
+            Ref: SecurityGroup
+  SubnetA:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.0.0/24
+      AvailabilityZone: ap-northeast-1a
+  SubnetB:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.1.0/24
+      AvailabilityZone: ap-northeast-1c
+  RDSSubnetGroup:
+    Type: 'AWS::RDS::DBSubnetGroup'
+    Properties:
+      SubnetIds:
+        - !Ref SubnetB
+        - !Ref SubnetA
+      DBSubnetGroupDescription: Subnet Group for RDS
+Outputs:
+  WebAPDNSName:
+    Description: The hostname of the WebAP Server
+    Value: !GetAtt 
+      - WebAP
+      - PublicDnsName
+  DBDNSNane:
+    Description: The hostname of the DB Server
+    Value: !GetAtt 
+      - RDS
+      - Endpoint.Address
