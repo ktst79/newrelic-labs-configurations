@@ -1,8 +1,8 @@
 # new-relic-labs
 This repository provides simple examples how to configure New Relic and how it worksin various environment. See subfolders for detail.
 
-- <a href="https://github.com/ktst79/newrelic-labs/tree/master/configurations/01_petclinic">Spring Application (PetClinic) Integration</a>
-- <a href="https://github.com/ktst79/newrelic-labs/tree/master/configurations/02_petclinic_rds">Spring Application (PetClinic) Integration w/ RDS (MySQL)</a>
+- <a href="https://github.com/ktst79/newrelic-labs-configurations/tree/master/01_petclinic">Spring Application (PetClinic) Integration</a>
+- <a href="https://github.com/ktst79/newrelic-labs-configurations/tree/master/02_petclinic_rds">Spring Application (PetClinic) Integration w/ RDS (MySQL)</a>
 - Comming soon
 
 
