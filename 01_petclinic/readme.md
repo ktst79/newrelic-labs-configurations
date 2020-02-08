@@ -1,4 +1,4 @@
-# New Relic Integration Exapmele with Spring PetClinic Sample Application
+# New Relic Integration Example with Spring PetClinic Sample Application
 
 *Japanese explanation follows English.*
 
