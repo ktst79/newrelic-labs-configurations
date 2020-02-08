@@ -18,6 +18,7 @@ Parameters:
   NRLicParam:
     Type: String
     Description: Enter New Relic License Key
+    NoEcho: true
   ApplicationNameParam:
     Type: String
     Description: Application Name

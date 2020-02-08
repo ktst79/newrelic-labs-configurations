@@ -125,7 +125,7 @@ JAR_FILE_PATH=`ls ${APP_DIR}/target/*.jar`
 JAR_FILE=`echo ${JAR_FILE_PATH##*/}`
 
 echo "Uploading application archive to S3. ${AWS_S3_PATH}/${JAR_FILE}"
-aws s3 cp ./target/$JAR_FILE $AWS_S3_PATH/
+aws s3 cp ${APP_DIR}/target/$JAR_FILE $AWS_S3_PATH/
 
 if [ "${FORCE_TO_DELETE_STACK}" = "enable" ] ; then
     echo "Deleting existing cloudformation stack. ${AWS_CF_STACK}"
@@ -134,7 +134,14 @@ if [ "${FORCE_TO_DELETE_STACK}" = "enable" ] ; then
 fi
 
 echo "Creating cloudformation stack. ${AWS_CF_STACK}"
-aws cloudformation create-stack --stack-name $AWS_CF_STACK --template-body file://$AWS_CF_TEMPLATE --parameters ParameterKey=KeyNameParam,ParameterValue=$AWS_KEY_NAME ParameterKey=WebAPAmiIDParam,ParameterValue=$AWS_AP_AMIID ParameterKey=InstanceTypeParam,ParameterValue=$AWS_AP_INSTANCETYPE ParameterKey=ApplicationJarParam,ParameterValue=$AWS_S3_PATH/$JAR_FILE ParameterKey=ManagedS3AccessIAMRoleParam,ParameterValue=$AWS_AMIROLE_S3ACCESS ParameterKey=NRLicParam,ParameterValue=$NR_LICENSEKEY ParameterKey=ApplicationNameParam,ParameterValue=$NR_APP_NAME --capabilities CAPABILITY_IAM
+aws cloudformation create-stack --stack-name $AWS_CF_STACK \
+    --template-body file://$AWS_CF_TEMPLATE \
+    --parameters ParameterKey=KeyNameParam,ParameterValue=$AWS_KEY_NAME \
+    ParameterKey=ApplicationJarParam,ParameterValue=$AWS_S3_PATH/$JAR_FILE \
+    ParameterKey=ManagedS3AccessIAMRoleParam,ParameterValue=$AWS_AMIROLE_S3ACCESS \
+    ParameterKey=NRLicParam,ParameterValue=$NR_LICENSEKEY \
+    ParameterKey=ApplicationNameParam,ParameterValue=$NR_APP_NAME \
+    --capabilities CAPABILITY_IAM
 
 echo "Waiting compleation of cloudformation stack. ${AWS_CF_STACK}"
 aws cloudformation wait stack-create-complete --stack-name $AWS_CF_STACK

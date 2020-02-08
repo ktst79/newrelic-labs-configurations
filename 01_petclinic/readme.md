@@ -40,10 +40,9 @@ Open build_param.sh
 |NR_APP_NAME | Application name to identify the application, which is configured in New Relic agent and shown in New Relic screen ||
 |AWS_KEY_NAME | AWS Key Name to access EC2 instance after deploying the application. This is set to EC2 instance through CloudFormation. ||
 |AWS_S3_PATH | AWS S3 path to which jar file is uploaded after compilation. Appliation server (EC2 instance) will access the file on S3 to deploy application. ||
-|AWS_AMIROLE_S3ACCESS | AMI Role to access S3 from EC2. The role will be assigned to EC2 instance. ||
+|AWS_AMIROLE_S3ACCESS | AMI Role to access S3 from EC2. The role will be assigned to EC2 instance. The role needs to be created in advance by yourself. ||
 |AWS_CF_STACK | CloudFormation stack name. | nrlabs-01-petclinic |
 |AWS_CF_TEMPLATE | CloudFormation template name. | ./resources/cloudformation/cloudformation.yaml |
-|AWS_AP_AMIID | AMI ID for EC2 instance. <span style="color:red;">This needs to be changed if you would like to deploy application to other region.</span> | ami-068a6cefc24c301d2 (Amazon Linux) |
 |APP_URL | Download URL of Spring Application | https://github.com/spring-projects/spring-petclinic/archive/master.zip |
 |APP_NAME | Folder name (Shown after unzip download file) | spring-petclinic-master |
 |FORCE_TO_DELETE_STACK | Forcibly delete exisiting stack with same name to overwirte the application | enable |
@@ -60,7 +59,7 @@ If you specify parameters in the other file, you can specify it with "-p" optin.
 ./build.sh -p <parameter file>
 ```
 
-### (Optional) Enable Browser agent
+### (Optional: -b) Enable Browser agent
 Yeild following steps if you would like to monitor performance on browser side. Basically New Relic Browser agent will be embeded automatically by APM agent. However, need to embed Javascript code of Browser agent if Java application doesn't use jsp (Spring Application uses Thymeleaf instead of jsp).
 
 #### Get Javascript Code from New Relic
@@ -73,6 +72,13 @@ Save file with the Javascript code. For example, ./resources/agents/browser_agen
 Save file with the Javascript code. For example, ./resources/agents/browser_agent
 ```
 ./build.sh -b <The file created in previous step>
+```
+
+### (Optional: -o) Force to overwite application
+When you specify the option '-o', you can download latest petclinic application again and override existing one. Need to backup in advance if you modify the application by yourself.
+
+```
+./build.sh -o
 ```
 
 ## Check the application
