@@ -7,6 +7,10 @@ By this, you can quickly try application performance monitoring by New Relic, an
 ## Target application
 This example uses the famous Java application: <a href="https://github.com/spring-projects/spring-petclinic" target="_blank">Spring Petclinic</a>. 
 
+Following is the system configuration which will be built by this sample.
+The petclinic Spring Boot application will be deployed on WebAP (AWS EC2), and it can be accessed from internet through Internet Gateway.
+<img src="./resources/images/configuration.png">
+
 ## What is done by this
 - Build the Spring Petclinic application and deploy it to AWS
 - Install New Relic APM agent on application server to monitor the Java application. See detail <a href="https://docs.newrelic.com/docs/agents/java-agent/installation/install-java-agent">here</a>
