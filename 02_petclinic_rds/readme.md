@@ -44,7 +44,6 @@ Open build_param.sh
 |AWS_AMIROLE_S3ACCESS | AMI Role to access S3 from EC2. The role will be assigned to EC2 instance. ||
 |AWS_CF_STACK | CloudFormation stack name. | nrlabs-02-petclinic-rds |
 |AWS_CF_TEMPLATE | CloudFormation template name. | ./resources/cloudformation/cloudformation.yaml |
-|AWS_AP_AMIID | AMI ID for EC2 instance. <span style="color:red;">This needs to be changed if you would like to deploy application to other region.</span> | ami-068a6cefc24c301d2 (Amazon Linux) |
 |APP_URL | Download URL of Spring Application | https://github.com/spring-projects/spring-petclinic/archive/master.zip |
 |APP_NAME | Folder name (Shown after unzip download file) | spring-petclinic-master |
 |FORCE_TO_DELETE_STACK | Forcibly delete exisiting stack with same name to overwirte the application | enable |
