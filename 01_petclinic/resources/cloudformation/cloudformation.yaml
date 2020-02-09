@@ -115,7 +115,7 @@ Resources:
 
           aws s3 cp ${ApplicationJarParam} /opt/petclinic/.
 
-          java -javaagent:/opt/newrelic/newrelic.jar -jar /opt/petclinic/*.jar
+          java -javaagent:/opt/newrelic/newrelic.jar -jar -Dnewrelic.config.distributed_tracing.enabled=true /opt/petclinic/*.jar
   Subnet:
     Type: 'AWS::EC2::Subnet'
     Properties:

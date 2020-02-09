@@ -158,7 +158,7 @@ Resources:
           -Dspring.profiles.active=mysql
           -Dspring.datasource.url=jdbc:mysql://${RDS.Endpoint.Address}/${DBNameParam}
           -Dspring.datasource.username=${DBMasterUserNameParam}
-          -Dspring.datasource.password=${DBPasswordParam} /opt/petclinic/*.jar
+          -Dspring.datasource.password=${DBPasswordParam} -Dnewrelic.config.distributed_tracing.enabled=true /opt/petclinic/*.jar
     DependsOn:
       - RDS
   SubnetRouteTable:
