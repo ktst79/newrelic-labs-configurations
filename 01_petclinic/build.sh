@@ -27,6 +27,7 @@ do
         # Check if browser agent needs to be read from file
         b) echo "Browser agent code will be added to the html"
            AGT_JS="${OPTARG}"
+           OVERWRITEAPP=true
            ;;
         # Check if download application and overwrite
         o) echo "Download brand-new application and replace old one with new one"
