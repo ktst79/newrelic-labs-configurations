@@ -86,7 +86,7 @@ if [ ! -e ${APP_DIR} ]; then
 fi
 
 APP_DIR=app
-if $OVERWRITEAPP ; then
+if [ "${OVERWRITEAPP}" = "true" ] ; then
     echo "Downloading application"
     rm -rf ${APP_DIR}
     curl -L -o ./app.zip ${APP_URL}
