@@ -91,12 +91,14 @@ cd ${DIR}
 
 cp app/target/*.jar resources/webap/
 
+${SED} s/\${NR_LICENSEKEY}/${NR_LICENSEKEY}/ resources/fluentd/fluent.conf > resources/fluentd/fluent.conf.local
+
 export NR_LICENSEKEY=${NR_LICENSEKEY}
 export NR_APP_NAME=${NR_APP_NAME}
 
-docker-compose -f resources/docker-compose.yml down
-docker-compose -f resources/docker-compose.yml build --no-cache
-docker-compose -f resources/docker-compose.yml up -d
+docker-compose -f ./docker-compose.yml down
+docker-compose -f ./docker-compose.yml build --no-cache
+docker-compose -f ./docker-compose.yml up -d
 
 export NR_LICENSEKEY=
 export NR_APP_NAME=

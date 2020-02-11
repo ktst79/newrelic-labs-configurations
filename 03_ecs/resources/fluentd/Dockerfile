@@ -7,7 +7,7 @@ USER root
 RUN apk add sudo &&  \
     sudo fluent-gem install fluent-plugin-newrelic
 
-ADD fluent.conf /fluentd/etc/
+ADD fluent.conf.local /fluentd/etc/fluent.conf
 ADD entrypoint.sh /bin/
 
 USER fluent
