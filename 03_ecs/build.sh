@@ -83,7 +83,10 @@ fi
 
 echo "Building application"
 cd ${APP_DIR}
-./mvnw package
+# To avoid including logback-test.xml under src/test/resources, do test and package seperately
+./mvnw test
+./mvnw clean
+./mvnw package -Dmaven.test.skip=true
 cd ${DIR}
 
 cp app/target/*.jar resources/webap/

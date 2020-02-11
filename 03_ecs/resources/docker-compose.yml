@@ -35,6 +35,8 @@ services:
     depends_on:
       - mysql
       - fluentd
+    volumes:
+      - /var/log/${NR_APP_NAME}/webap:/logs
     logging:
       driver: fluentd
       options:
@@ -46,6 +48,8 @@ services:
     container_name: fluentd
     ports:
       - "24224:24224"
+    volumes:
+      - /var/log/${NR_APP_NAME}/webap:/logs/webap
     logging:
       driver: fluentd
       options:
