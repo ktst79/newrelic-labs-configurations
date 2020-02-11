@@ -81,6 +81,9 @@ if [ "${AGT_JS}" != "" ] ; then
     ${SED} -i "/<body>/r ${AGT_JS}" ${APP_DIR}/src/main/resources/templates/fragments/layout.html
 fi
 
+cp -f resources/newrelic_log/logback.xml app/src/main/resources
+cp -f resources/newrelic_log/logback-test.xml app/src/test/resources
+
 echo "Building application"
 cd ${APP_DIR}
 # To avoid including logback-test.xml under src/test/resources, do test and package seperately
