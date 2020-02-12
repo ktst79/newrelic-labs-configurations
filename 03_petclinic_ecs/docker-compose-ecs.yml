@@ -2,7 +2,7 @@ version: "3"
 services:
   fluentd:
     build: "./resources/fluentd"
-    image: nrlabs-configurations/03_petclinic_ecs_fluentd
+    image: ${WEBAP_REPOSITORY}nrlabs-configurations/03_petclinic_ecs_fluentd
     container_name: fluentd
     ports:
       - "24224:24224"
@@ -13,7 +13,7 @@ services:
       options:
         fluentd-address: "localhost:24224"
         tag: "docker.${NR_APP_NAME}.{{.Name}}.{{.ID}}"
-        fluentd-async-connect: "true"        
+        fluentd-async-connect: "true"
 
   mysql:
     image: mysql:5.7
@@ -26,7 +26,8 @@ services:
       TZ: 'Asia/Tokyo'
     ports:
       - 3306:3306
-    depends_on:
+    #ECS doesn't support 'depends_on', needs to use 'links' altough it is not recommended
+    links:
       - fluentd
     logging:
       driver: fluentd
@@ -41,15 +42,16 @@ services:
       args:
         - NR_APP_NAME=${NR_APP_NAME}
         - NR_LICENSEKEY=${NR_LICENSEKEY}
-    image: nrlabs-configurations/03_petclinic_ecs_webap
+    image: ${WEBAP_REPOSITORY}nrlabs-configurations/03_petclinic_ecs_webap
     container_name: webap
     environment:
       DBURL: jdbc:mysql://mysql/db
       DBUSER: master
       DBPASS: password
     ports:
-      - 8080:8080
-    depends_on:
+      - 80:8080
+    #ECS doesn't support 'depends_on', needs to use 'links' altough it is not recommended
+    links:
       - mysql
       - fluentd
     volumes:
@@ -59,5 +61,4 @@ services:
       options:
         fluentd-address: "localhost:24224"
         tag: "docker.${NR_APP_NAME}.{{.Name}}.{{.ID}}"
-        fluentd-async-connect: "true"
-
+        fluentd-async-connect: "true"        
