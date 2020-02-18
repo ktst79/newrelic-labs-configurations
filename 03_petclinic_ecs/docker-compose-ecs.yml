@@ -2,7 +2,7 @@ version: "3"
 services:
   fluentd:
     build: "./resources/fluentd"
-    image: ${WEBAP_REPOSITORY}nrlabs-configurations/03_petclinic_ecs_fluentd
+    image: ${REPOSITORY_URI_PATH}nrlabs-03-petclinic-ecs-fluentd
     container_name: fluentd
     ports:
       - "24224:24224"
@@ -42,7 +42,7 @@ services:
       args:
         - NR_APP_NAME=${NR_APP_NAME}
         - NR_LICENSEKEY=${NR_LICENSEKEY}
-    image: ${WEBAP_REPOSITORY}nrlabs-configurations/03_petclinic_ecs_webap
+    image: ${REPOSITORY_URI_PATH}nrlabs-03-petclinic-ecs-webap
     container_name: webap
     environment:
       DBURL: jdbc:mysql://mysql/db
