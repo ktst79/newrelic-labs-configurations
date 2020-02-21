@@ -3,6 +3,7 @@ This repository provides simple examples to start trying New Relic and to know h
 
 - <a href="https://github.com/ktst79/newrelic-labs-configurations/tree/master/01_petclinic">Spring Application (PetClinic) Integration</a>
 - <a href="https://github.com/ktst79/newrelic-labs-configurations/tree/master/02_petclinic_rds">Spring Application (PetClinic) Integration w/ RDS (MySQL)</a>
+- <a href="https://github.com/ktst79/newrelic-labs-configurations/tree/master/03_petclinic_ecs">Spring Application (PetClinic) Integration on Local Docker or ECS</a>
 - Comming soon
 
 
