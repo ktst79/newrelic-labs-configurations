@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8">
-    <title>Sample</title>
+    <title>Home</title>
     <div th:remove="tag" th:utext="${T(com.newrelic.api.agent.NewRelic).getBrowserTimingHeader()}"></div>
 </head>
 
@@ -12,6 +12,8 @@
         <li><a href="/apm_custom_instrumentation">APM Custom Instrumentation</a></li>
         <li><a href="/apm_custom_attribute">APM Custom Attribute</a></li>
         <li><a href="/apm_exception">APM Exception</a></li>
+        <li><a href="/ajax?result=success">AJAX (Success)</a></li>
+        <li><a href="/ajax?result=failure">AJAX (Failure)</a></li>
         <li><a href="/browser_custom_attribute">Browser Custom Attribute</a></li>
         <li><a href="/">Home</a></li>
     </ul>    
