@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Sample</title>
+    <div th:remove="tag" th:utext="${T(com.newrelic.api.agent.NewRelic).getBrowserTimingHeader()}"></div>
+</head>
+
+<body>
+    <h1>APM Custom Attribute</h1>
+    <script type="text/javascript">
+        newrelic.setCustomAttribute("custom_attribute", "I'm APM Custom Attribute");
+    </script>
+    <li><a href="/">Home</a></li>
+    <div th:utext="${T(com.newrelic.api.agent.NewRelic).getBrowserTimingFooter()}"></div>
+</body>
+
+</html>
