@@ -13,9 +13,18 @@
         <li><a href="/apm_custom_attribute?name=a&category=1">APM Custom Attribute (name=a, category=1)</a></li>
         <li><a href="/apm_custom_attribute?name=bb&category=2">APM Custom Attribute (name=bb, category=2)</a></li>
         <li><a href="/apm_custom_attribute?name=ccc&category=3">APM Custom Attribute (name=ccc, category=3)</a></li>
-        <li><a href="/apm_exception">APM Exception</a></li>
+        <li><a href="/apm_exception?ignore=true">APM Exception (Ignored)</a></li>
+        <li><a href="/apm_exception?ignore=false">APM Exception (Not Ignored)</a></li>
         <li><a href="/ajax?result=success">AJAX (Success)</a></li>
         <li><a href="/ajax?result=failure">AJAX (Failure)</a></li>
+        <li>
+            <form role="form" action="/apm_custom_attribute_post" method="post">
+                <input type="hidden" value="hidden_value" name="hidden_name">
+                <input type="hidden" value="hidden_value1" name="hidden_name2">
+                <button type="submit">POST</button>
+            </form>
+        </li>
+
         <li><a href="/browser_custom_attribute">Browser Custom Attribute</a></li>
         <li><a href="/">Home</a></li>
     </ul>    
