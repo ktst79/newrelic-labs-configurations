@@ -1,7 +1,6 @@
-  <dependencies>
+    <!-- Logback and New Relic Dependency -->
     <dependency>
       <groupId>com.newrelic.logging</groupId>
       <artifactId>logback</artifactId>
       <version>1.0-rc2</version>
     </dependency>
-  </dependencies>
