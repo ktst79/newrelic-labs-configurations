@@ -96,8 +96,6 @@ if [ "${OVERWRITEAPP}" = "true" ] ; then
     ${SED} -n -i -e "/^\s\s<\/dependencies>/r ${POM_FRAGMENT}" -e 1x -e '2,${x;p}' -e '${x;p}' ${APP_DIR}/pom.xml
 fi
 
-exit 0
-
 cp -f resources/newrelic_log/logback.xml app/src/main/resources
 cp -f resources/newrelic_log/logback-test.xml app/src/test/resources
 
