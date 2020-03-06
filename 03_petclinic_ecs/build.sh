@@ -16,17 +16,12 @@ fi
 
 . ./build_param.sh
 
-while getopts p:b:o OPT
+while getopts p:o OPT
 do
     case $OPT in
         # Check if parameters need to be retrieved from specified file or keep default file (build_param.sh)
         p) echo "Retrieving parameters from ${OPTARG}"
            . $OPTARG
-           ;;
-        # Check if browser agent needs to be read from file
-        b) echo "Browser agent code will be added to the html"
-           AGT_JS="${OPTARG}"
-           OVERWRITEAPP=true
            ;;
         # Check if download application and overwrite
         o) echo "Download brand-new application and replace old one with new one"
@@ -87,18 +82,14 @@ if [ "${OVERWRITEAPP}" = "true" ] ; then
     unzip ./app.zip -d .
     mv ${APP_NAME} ${APP_DIR}
     rm ./app.zip
-fi
 
-if [ "${AGT_JS}" != "" ] ; then
-    echo "Embeddig Browser Agent"
+    echo "Embeddig Browser Agent Header"
+    AGT_HEADER='  <div th:remove="tag" th:utext="${T(com.newrelic.api.agent.NewRelic).getBrowserTimingHeader()}"></div>'
+    ${SED} -i "/<body>/a ${AGT_HEADER}" ${APP_DIR}/src/main/resources/templates/fragments/layout.html
 
-    # Delete old load snippet
-    ${SED} -i -e '2d' ${AGT_JS}
-
-    # Insert latest load snippet
-    curl https://js-agent.newrelic.com/nr-loader-spa-current.min.js -w "\n" | gsed -i '1r /dev/stdin' ${AGT_JS}
-    
-    ${SED} -i "/<body>/r ${AGT_JS}" ${APP_DIR}/src/main/resources/templates/fragments/layout.html
+    echo "Embeddig Browser Agent Footer"
+    AGT_FOOTER='  <div th:utext="${T(com.newrelic.api.agent.NewRelic).getBrowserTimingFooter()}"></div>'
+    ${SED} -i "/<\/body>/i ${AGT_FOOTER}" ${APP_DIR}/src/main/resources/templates/fragments/layout.html
 fi
 
 cp -f resources/newrelic_log/logback.xml app/src/main/resources
@@ -119,10 +110,19 @@ ${SED} s/\${NR_LICENSEKEY}/${NR_LICENSEKEY}/ resources/fluentd/fluent.conf > res
 export NR_LICENSEKEY=${NR_LICENSEKEY}
 export NR_APP_NAME=${NR_APP_NAME}
 
-if [ "${ENV}" = "ecs_ec2" ] ; then
+export MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+export MYSQL_DATABASE=${MYSQL_DATABASE}
+export MYSQL_USER=${MYSQL_USER}
+export MYSQL_PASSWORD=${MYSQL_PASSWORD}
+
+if [ "${ENV}" = "ecs_ec2" ] || [ "${ENV}" = "ecs_fargate" ] ; then
     echo "Deploying on AWS ECS..."
     CLUSTER_NAME=${NR_APP_NAME}-cluster
-    CLUSTER_LAUNCH_TYPE='EC2'
+    if [ "${ENV}" = "ecs_ec2" ] ; then
+        CLUSTER_LAUNCH_TYPE='EC2'
+    else
+        CLUSTER_LAUNCH_TYPE='FARGATE'
+    fi
 
     # Get AWS Region and Account ID
     AWS_REGION=`aws configure get region`
@@ -158,6 +158,12 @@ if [ "${ENV}" = "ecs_ec2" ] ; then
         echo "Cluster instance already running: ${CLUSTER_NAME}"
     fi
 
+    # Waiting for EC2 instance is ready
+    while [ "$(aws ecs describe-clusters --cluster=${CLUSTER_NAME} | sed -n 's/^.*\"registeredContainerInstancesCount\"\: \(.*\),.*$/\1/p')" -lt 1 ]; do
+        sleep 10
+        echo "rechecking cluster status..."
+    done
+
     echo "Logging in AWS..."
     $(aws ecr get-login --no-include-email --region ${AWS_REGION})
 
@@ -165,7 +171,6 @@ if [ "${ENV}" = "ecs_ec2" ] ; then
     export REPOSITORY_URI_PATH=
     docker-compose -f docker-compose-ecs.yml build
 
-    #yq -r '.services[] | select(has("build")).container_name' docker-compose-ecs.yml
     for container in `yq -r '.services[] | select(has("build")).container_name' docker-compose-ecs.yml`
     do
         REPOSITORY_NAME=${NR_APP_NAME}-${container}

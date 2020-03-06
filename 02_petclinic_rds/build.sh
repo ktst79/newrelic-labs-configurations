@@ -17,17 +17,12 @@ fi
 . ./build_param.sh
 
 OVERWRITEAPP=false
-while getopts p:b:o OPT
+while getopts p:o OPT
 do
     case $OPT in
         # Check if parameters need to be retrieved from specified file or keep default file (build_param.sh)
         p) echo "Retrieving parameters from ${OPTARG}"
            . $OPTARG
-           ;;
-        # Check if browser agent needs to be read from file
-        b) echo "Browser agent code will be added to the html"
-           AGT_JS="${OPTARG}"
-           OVERWRITEAPP=true
            ;;
         # Check if download application and overwrite
         o) echo "Download brand-new application and replace old one with new one"
@@ -93,18 +88,14 @@ if [ "${OVERWRITEAPP}" = "true" ] ; then
     unzip ./app.zip -d .
     mv ${APP_NAME} ${APP_DIR}
     rm ./app.zip
-fi
 
-if [ "${AGT_JS}" != "" ] ; then
-    echo "Embeddig Browser Agent"
+    echo "Embeddig Browser Agent Header"
+    AGT_HEADER='  <div th:remove="tag" th:utext="${T(com.newrelic.api.agent.NewRelic).getBrowserTimingHeader()}"></div>'
+    ${SED} -i "/<body>/a ${AGT_HEADER}" ${APP_DIR}/src/main/resources/templates/fragments/layout.html
 
-    # Delete old load snippet
-    ${SED} -i -e '2d' ${AGT_JS}
-
-    # Insert latest load snippet
-    curl https://js-agent.newrelic.com/nr-loader-spa-current.min.js -w "\n" | gsed -i '1r /dev/stdin' ${AGT_JS}
-    
-    ${SED} -i "/<body>/r ${AGT_JS}" ${APP_DIR}/src/main/resources/templates/fragments/layout.html
+    echo "Embeddig Browser Agent Footer"
+    AGT_FOOTER='  <div th:utext="${T(com.newrelic.api.agent.NewRelic).getBrowserTimingFooter()}"></div>'
+    ${SED} -i "/<\/body>/i ${AGT_FOOTER}" ${APP_DIR}/src/main/resources/templates/fragments/layout.html
 fi
 
 echo "Building application"

@@ -10,3 +10,6 @@ This would include followings.
     - On premise docker: Done
     - ECS on EC2 or Fargate
     - EKS on EC2 or Fargate
+- Prerequisite
+    - python-yq to parse yaml. Can be installed by pip install yq or brew install python-yq for mac.
+    - Need to add pom dependency for logback new relic agent
