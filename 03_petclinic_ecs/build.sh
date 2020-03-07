@@ -169,9 +169,9 @@ if [ "${ENV}" = "ecs_ec2" ] ; then
 
     echo "Build docker images..."
     export REPOSITORY_URI_PATH=
-    docker-compose -f docker-compose-ecs.yml build
+    docker-compose -f docker-compose-ecs-ec2.yml build
 
-    for container in `yq -r '.services[] | select(has("build")).container_name' docker-compose-ecs.yml`
+    for container in `yq -r '.services[] | select(has("build")).container_name' docker-compose-ecs-ec2.yml`
     do
         REPOSITORY_NAME=${NR_APP_NAME}-${container}
         REPOSITORY_URI=`aws ecr describe-repositories --repository-name ${REPOSITORY_NAME} | jq -r '.repositories[0].repositoryUri'`
@@ -192,8 +192,8 @@ if [ "${ENV}" = "ecs_ec2" ] ; then
     export REPOSITORY_URI_PATH=${REPOSITORY_URI_PATH}
 
     echo "Launching ECS..."
-    ecs-cli compose -f docker-compose-ecs.yml down
-    ecs-cli compose -f docker-compose-ecs.yml up
+    ecs-cli compose -f docker-compose-ecs-ec2.yml down
+    ecs-cli compose -f docker-compose-ecs-ec2.yml up
 elif [ "${ENV}" = "ecs_fargate" ] ; then
     echo "Deploying on AWS ECS..."
     CLUSTER_NAME=${NR_APP_NAME}-cluster
@@ -221,23 +221,36 @@ elif [ "${ENV}" = "ecs_fargate" ] ; then
     fi
 
     echo "Launching ECS cluster instance ...: ${CLUSTER_NAME}"
-    LAUNCH_INSTANCE_CMD="ecs-cli up --launch-type ${CLUSTER_LAUNCH_TYPE} --cluster ${CLUSTER_NAME}"
-
-    ${LAUNCH_INSTANCE_CMD}
-
+    LAUNCH_INSTANCE_RESULT=`ecs-cli up --launch-type ${CLUSTER_LAUNCH_TYPE} --cluster ${CLUSTER_NAME}`
     if [ $? = 1 ] ; then
-        # If cluster instance already exists
-        echo "Cluster instance already running: ${CLUSTER_NAME}"
+        echo "Failed to launching cluster instance: ${CLUSTER_NAME}"
+        exit 1
     fi
+
+    echo "ECS cluster instance has been created.: ${CLUSTER_NAME}"
+    VPC_ID=`echo "${LAUNCH_INSTANCE_RESULT}" |  awk 'match($0, /VPC created: (.*)/, a){print a[1]}'`
+    SUBNETS=(`echo "${LAUNCH_INSTANCE_RESULT}" |  awk 'match($0, /Subnet created: (.*)/, a){print a[1]}'`)
+    SUBNET_ID_1=${SUBNETS[0]}
+    SUBNET_ID_2=${SUBNETS[1]}
+    SG_ID=`aws ec2 describe-security-groups --filters Name=vpc-id,Values=${VPC_ID} --region ${AWS_REGION} | jq -r '.SecurityGroups[0].GroupId'`
+    echo "VPC: ${VPC_ID}"
+    echo "SUBNET_1: ${SUBNET_ID_1}"
+    echo "SUBNET_2: ${SUBNET_ID_2}"
+    echo "Security Group: ${SG_ID}"
+
+    export VPC_ID=${VPC_ID}
+    export SUBNET_ID_1=${SUBNET_ID_1}
+    export SUBNET_ID_2=${SUBNET_ID_2}
+    export SG_ID=${SG_ID}
 
     echo "Logging in AWS..."
     $(aws ecr get-login --no-include-email --region ${AWS_REGION})
 
     echo "Build docker images..."
     export REPOSITORY_URI_PATH=
-    docker-compose -f docker-compose-ecs.yml build
+    docker-compose -f docker-compose-ecs-fargate.yml build
 
-    for container in `yq -r '.services[] | select(has("build")).container_name' docker-compose-ecs.yml`
+    for container in `yq -r '.services[] | select(has("build")).container_name' docker-compose-ecs-fargate.yml`
     do
         REPOSITORY_NAME=${NR_APP_NAME}-${container}
         REPOSITORY_URI=`aws ecr describe-repositories --repository-name ${REPOSITORY_NAME} | jq -r '.repositories[0].repositoryUri'`
@@ -258,8 +271,8 @@ elif [ "${ENV}" = "ecs_fargate" ] ; then
     export REPOSITORY_URI_PATH=${REPOSITORY_URI_PATH}
 
     echo "Launching ECS..."
-    ecs-cli compose -f docker-compose-ecs.yml down
-    ecs-cli compose -f docker-compose-ecs.yml up
+    ecs-cli compose -f docker-compose-ecs-fargate.yml down
+    ecs-cli compose -f docker-compose-ecs-fargate.yml --ecs-params ./ecs-params-fargate.yml up
 else
     echo "Launching Container on local Docker."
     docker-compose -f ./docker-compose.yml down
