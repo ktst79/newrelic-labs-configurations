@@ -15,7 +15,7 @@ public class RootController {
     }
 
     @RequestMapping("/ajax")
-    public String ajax(@RequestParam("result") String result) {
+    public String ajax(@RequestParam("result") String result, @RequestParam(name="count", required=false, defaultValue="0") Integer count) {
         if ("success".equals(result)) {
             return "ajax_success";
         } else {

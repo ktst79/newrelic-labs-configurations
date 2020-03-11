@@ -12,7 +12,8 @@
     <script type="text/javascript">
         var xhr = new XMLHttpRequest();
 
-        xhr.open('GET', "/api?result=failure");
+        //xhr.open('GET', "/api?result=failure");
+        xhr.open('GET', "/api"+location.search);
         xhr.send();
 
         xhr.onreadystatechange = function() {
