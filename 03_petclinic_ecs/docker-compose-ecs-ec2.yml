@@ -45,11 +45,12 @@ services:
     image: ${REPOSITORY_URI_PATH}nrlabs-03-petclinic-ecs-webap
     container_name: webap
     environment:
-      DBURL: jdbc:mysql://mysql/db
-      DBUSER: master
-      DBPASS: password
+      DBURL: jdbc:mysql://mysql/${MYSQL_DATABASE}
+      DBUSER: ${MYSQL_USER}
+      DBPASS: ${MYSQL_PASSWORD}
+      WEBAP_PORT: ${WEBAP_PORT}
     ports:
-      - 8080:8080
+      - 80:8080
     #ECS doesn't support 'depends_on', needs to use 'links' altough it is not recommended
     links:
       - mysql

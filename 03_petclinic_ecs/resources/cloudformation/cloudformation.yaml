@@ -1,0 +1,82 @@
+AWSTemplateFormatVersion: 2010-09-09
+Parameters:
+  ClusterNameParam:
+    Type: String
+    Description: Cluster Name
+Resources:
+  InternetGateway:
+    Type: 'AWS::EC2::InternetGateway'
+    Properties: {}
+  VPC:
+    Type: 'AWS::EC2::VPC'
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsHostnames: 'true'
+  VPCGatewayAttachment:
+    Type: 'AWS::EC2::VPCGatewayAttachment'
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
+  SecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      VpcId: !Ref VPC
+      GroupDescription: Security Group for ECS
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 8080
+          ToPort: 8080
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+  SubnetRouteTable:
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref VPC
+  IGWRouteTable:
+    Type: 'AWS::EC2::Route'
+    Properties:
+      RouteTableId: !Ref SubnetRouteTable
+      GatewayId: !Ref InternetGateway
+      DestinationCidrBlock: 0.0.0.0/0
+  SubnetA:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.0.0/24
+      AvailabilityZone: ap-northeast-1a
+  SubnetB:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.1.0/24
+      AvailabilityZone: ap-northeast-1c
+  PublicRouteTableAssociationB:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      RouteTableId: !Ref SubnetRouteTable
+      SubnetId: !Ref SubnetB
+  PublicRouteTableAssociationA:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      RouteTableId: !Ref SubnetRouteTable
+      SubnetId: !Ref SubnetA
+  ECSCluster:
+    Type: 'AWS::ECS::Cluster'
+    Properties:
+      ClusterName: !Ref ClusterNameParam
+Outputs:
+  VPCID:
+    Description: The hostname of the WebAP Server
+    Value: !Ref VPC
+  SUBNET1ID:
+    Description: Subnet ID of SubnetA
+    Value: !Ref SubnetA
+  SUBNET2ID:
+    Description: Subnet ID of SubnetB
+    Value: !Ref SubnetB
+  SECURITYGROUPID:
+    Description: Security Group ID
+    Value: !Ref SecurityGroup

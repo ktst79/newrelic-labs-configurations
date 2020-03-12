@@ -54,6 +54,16 @@ if [ "${AWS_KEY_NAME}" = "" ] ; then
     exit 1
 fi
 
+if [ "${AWS_CF_STACK}" = "" ] ; then
+    echo 'AWS_CF_STACK are not specified. Check build_param.sh'
+    exit 1
+fi
+
+if [ "${AWS_CF_TEMPLATE}" = "" ] ; then
+    echo 'AWS_CF_TEMPLATE are not specified. Check build_param.sh'
+    exit 1
+fi
+
 if [ ! -e ${APP_DIR} ]; then
     echo "There is no folder '${APP_DIR}', so download application forcibly"
     OVERWRITEAPP=true
@@ -120,9 +130,9 @@ export MYSQL_USER=${MYSQL_USER}
 export MYSQL_PASSWORD=${MYSQL_PASSWORD}
 
 if [ "${ENV}" = "ecs_ec2" ] ; then
-    echo "Deploying on AWS ECS..."
     CLUSTER_NAME=${NR_APP_NAME}-cluster
     CLUSTER_LAUNCH_TYPE='EC2'
+    echo "Deploying on AWS ECS(${CLUSTER_LAUNCH_TYPE})..."
 
     # Get AWS Region and Account ID
     AWS_REGION=`aws configure get region`
@@ -131,14 +141,8 @@ if [ "${ENV}" = "ecs_ec2" ] ; then
     export AWS_REGION=${AWS_REGION}
     export AWS_ACCOUNT_ID=${AWS_ACCOUNT_ID}
 
-    ecs-cli ps -c ${CLUSTER_NAME}
-    if [ $? = 1 ] ; then
-        # Create cluster if not exists
-        echo "Creating ECS Cluster...: ${CLUSTER_NAME}"
-        ecs-cli configure -c ${CLUSTER_NAME} -r ${AWS_REGION}
-    else
-        echo "ECS Cluster already exists: ${CLUSTER_NAME}"
-    fi
+    echo "Configuring ECS Cluster...: ${CLUSTER_NAME}"
+    ecs-cli configure -c ${CLUSTER_NAME} -r ${AWS_REGION} --default-launch-type ${CLUSTER_LAUNCH_TYPE}
 
     if [ "${FORCE_TO_DELETE_STACK}" = "enable" ] ; then
         echo "Stopping existing cluster instance. ${CLUSTER_NAME}"
@@ -195,53 +199,49 @@ if [ "${ENV}" = "ecs_ec2" ] ; then
     ecs-cli compose -f docker-compose-ecs-ec2.yml down
     ecs-cli compose -f docker-compose-ecs-ec2.yml up
 elif [ "${ENV}" = "ecs_fargate" ] ; then
-    echo "Deploying on AWS ECS..."
     CLUSTER_NAME=${NR_APP_NAME}-cluster
     CLUSTER_LAUNCH_TYPE='FARGATE'
+    echo "Deploying on AWS ECS(${CLUSTER_LAUNCH_TYPE})..."
 
     # Get AWS Region and Account ID
     AWS_REGION=`aws configure get region`
-    AWS_ACCOUNT_ID=`aws sts get-caller-identity --query 'Account' --output text`
+    AWS_ACCOUNT_ID=`aws sts get-caller-identity --query 'Account' --output text`    
 
-    export AWS_REGION=${AWS_REGION}
-    export AWS_ACCOUNT_ID=${AWS_ACCOUNT_ID}
 
-    ecs-cli ps -c ${CLUSTER_NAME}
-    if [ $? = 1 ] ; then
-        # Create cluster if not exists
-        echo "Creating ECS Cluster...: ${CLUSTER_NAME}"
-        ecs-cli configure -c ${CLUSTER_NAME} -r ${AWS_REGION}
-    else
-        echo "ECS Cluster already exists: ${CLUSTER_NAME}"
-    fi
+    echo "Stopping ecs containers..."
+    ecs-cli compose -f docker-compose-ecs-fargate.yml --cluster ${CLUSTER_NAME} down
 
     if [ "${FORCE_TO_DELETE_STACK}" = "enable" ] ; then
-        echo "Stopping existing cluster instance. ${CLUSTER_NAME}"
-        ecs-cli down --cluster ${CLUSTER_NAME} -f
+        echo "Deleting existing cloudformation stack. ${AWS_CF_STACK}"
+        aws cloudformation delete-stack --stack-name ${AWS_CF_STACK}
+        aws cloudformation wait stack-delete-complete --stack-name ${AWS_CF_STACK}
     fi
 
-    echo "Launching ECS cluster instance ...: ${CLUSTER_NAME}"
-    LAUNCH_INSTANCE_RESULT=`ecs-cli up --launch-type ${CLUSTER_LAUNCH_TYPE} --cluster ${CLUSTER_NAME}`
-    if [ $? = 1 ] ; then
-        echo "Failed to launching cluster instance: ${CLUSTER_NAME}"
-        exit 1
-    fi
+    echo "Creating cloudformation stack. ${AWS_CF_STACK}"
+    aws cloudformation create-stack --stack-name ${AWS_CF_STACK} \
+        --template-body file://${AWS_CF_TEMPLATE} \
+        --parameters ParameterKey=ClusterNameParam,ParameterValue=${CLUSTER_NAME} \
+        --capabilities CAPABILITY_IAM
 
-    echo "ECS cluster instance has been created.: ${CLUSTER_NAME}"
-    VPC_ID=`echo "${LAUNCH_INSTANCE_RESULT}" |  awk 'match($0, /VPC created: (.*)/, a){print a[1]}'`
-    SUBNETS=(`echo "${LAUNCH_INSTANCE_RESULT}" |  awk 'match($0, /Subnet created: (.*)/, a){print a[1]}'`)
-    SUBNET_ID_1=${SUBNETS[0]}
-    SUBNET_ID_2=${SUBNETS[1]}
-    SG_ID=`aws ec2 describe-security-groups --filters Name=vpc-id,Values=${VPC_ID} --region ${AWS_REGION} | jq -r '.SecurityGroups[0].GroupId'`
+    echo "Waiting compleation of cloudformation stack. ${AWS_CF_STACK}"
+    aws cloudformation wait stack-create-complete --stack-name ${AWS_CF_STACK}
+
+    echo "Cloudformation stack has been created. ${AWS_CF_STACK}"
+    OUTPUTS=`aws cloudformation describe-stacks --stack-name ${AWS_CF_STACK}`
+
+    VPC_ID=`echo "${OUTPUTS}" | jq -r '.Stacks[0].Outputs[] | select(.OutputKey == "VPCID") | .OutputValue'`
+    SUBNET_ID_1=`echo "${OUTPUTS}" | jq -r '.Stacks[0].Outputs[] | select(.OutputKey == "SUBNET1ID") | .OutputValue'`
+    SUBNET_ID_2=`echo "${OUTPUTS}" | jq -r '.Stacks[0].Outputs[] | select(.OutputKey == "SUBNET2ID") | .OutputValue'`
+    SECURITYGROUPID=`echo "${OUTPUTS}" | jq -r '.Stacks[0].Outputs[] | select(.OutputKey == "SECURITYGROUPID") | .OutputValue'`
     echo "VPC: ${VPC_ID}"
     echo "SUBNET_1: ${SUBNET_ID_1}"
     echo "SUBNET_2: ${SUBNET_ID_2}"
-    echo "Security Group: ${SG_ID}"
+    echo "Security Group: ${SECURITYGROUPID}"
 
     export VPC_ID=${VPC_ID}
     export SUBNET_ID_1=${SUBNET_ID_1}
     export SUBNET_ID_2=${SUBNET_ID_2}
-    export SG_ID=${SG_ID}
+    export SECURITYGROUPID=${SECURITYGROUPID}
 
     echo "Logging in AWS..."
     $(aws ecr get-login --no-include-email --region ${AWS_REGION})
@@ -271,8 +271,7 @@ elif [ "${ENV}" = "ecs_fargate" ] ; then
     export REPOSITORY_URI_PATH=${REPOSITORY_URI_PATH}
 
     echo "Launching ECS..."
-    ecs-cli compose -f docker-compose-ecs-fargate.yml down
-    ecs-cli compose -f docker-compose-ecs-fargate.yml --ecs-params ./ecs-params-fargate.yml up
+    ecs-cli compose -f docker-compose-ecs-fargate.yml --ecs-params ./ecs-params-fargate.yml --cluster ${CLUSTER_NAME} up --launch-type ${CLUSTER_LAUNCH_TYPE} 
 else
     echo "Launching Container on local Docker."
     docker-compose -f ./docker-compose.yml down

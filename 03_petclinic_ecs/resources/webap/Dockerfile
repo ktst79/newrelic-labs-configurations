@@ -27,4 +27,3 @@ CMD java -javaagent:/opt/newrelic/newrelic.jar -jar \
     -Dspring.datasource.password=${DBPASS} \
     -Dnewrelic.config.distributed_tracing.enabled=true \
     /opt/petclinic/*.jar
-
