@@ -4,6 +4,8 @@ This repository provides simple examples to start trying New Relic and to know h
 - <a href="https://github.com/ktst79/newrelic-labs-configurations/tree/master/01_petclinic">Spring Application (PetClinic) Integration</a>
 - <a href="https://github.com/ktst79/newrelic-labs-configurations/tree/master/02_petclinic_rds">Spring Application (PetClinic) Integration w/ RDS (MySQL)</a>
 - <a href="https://github.com/ktst79/newrelic-labs-configurations/tree/master/03_petclinic_ecs">Spring Application (PetClinic) Integration on Local Docker or ECS</a>
+- <a href="https://github.com/ktst79/newrelic-labs-configurations/tree/master/20_php_fuelphp/app/fuelphp/app">PHP simple application w/ Fuelphp</a>
+- <a href="https://github.com/ktst79/newrelic-labs-configurations/tree/master/50_custom_instruments">Java simple application w/ custom instrumentation, custom attribute</a>
 - Comming soon
 
 
