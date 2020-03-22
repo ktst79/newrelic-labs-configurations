@@ -78,6 +78,14 @@
                                 <nil key="textColor"/>
                                 <nil key="highlightedColor"/>
                             </label>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="COX-jS-TON">
+                                <rect key="frame" x="0.0" y="325" width="414" height="41"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="24"/>
+                                <state key="normal" title="Raise Error"/>
+                                <connections>
+                                    <action selector="handleRaiseError:" destination="eFe-9s-Vxn" eventType="touchUpInside" id="GwJ-WI-YTm"/>
+                                </connections>
+                            </button>
                         </subviews>
                         <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
                         <constraints>
@@ -92,12 +100,15 @@
                             <constraint firstItem="yj5-cX-tDx" firstAttribute="top" secondItem="Sza-jt-UVa" secondAttribute="bottom" id="LbI-fq-eNg"/>
                             <constraint firstItem="Xpg-Gi-Diy" firstAttribute="top" secondItem="Wug-Ib-S1G" secondAttribute="bottom" constant="8" symbolic="YES" id="Oci-Q4-M1g"/>
                             <constraint firstItem="yj5-cX-tDx" firstAttribute="leading" secondItem="tt4-Bi-ao1" secondAttribute="leading" id="a7S-7H-e97"/>
+                            <constraint firstItem="COX-jS-TON" firstAttribute="leading" secondItem="tt4-Bi-ao1" secondAttribute="leading" id="csc-bC-AqR"/>
                             <constraint firstItem="alE-4u-cMA" firstAttribute="top" secondItem="Xpg-Gi-Diy" secondAttribute="bottom" constant="8" symbolic="YES" id="eFW-7s-ItW"/>
                             <constraint firstItem="Wug-Ib-S1G" firstAttribute="top" secondItem="tt4-Bi-ao1" secondAttribute="top" id="hmv-w2-Mk9"/>
                             <constraint firstItem="tt4-Bi-ao1" firstAttribute="trailing" secondItem="Xpg-Gi-Diy" secondAttribute="trailing" id="iF8-Vh-6kE"/>
                             <constraint firstItem="Xpg-Gi-Diy" firstAttribute="leading" secondItem="qO7-96-A4p" secondAttribute="leading" constant="20" symbolic="YES" id="iZf-OD-PRd"/>
+                            <constraint firstItem="tt4-Bi-ao1" firstAttribute="trailing" secondItem="COX-jS-TON" secondAttribute="trailing" id="qZA-4P-z65"/>
                             <constraint firstItem="tt4-Bi-ao1" firstAttribute="trailing" secondItem="Sza-jt-UVa" secondAttribute="trailing" id="qZD-eP-RXc"/>
                             <constraint firstItem="alE-4u-cMA" firstAttribute="leading" secondItem="qO7-96-A4p" secondAttribute="leading" constant="20" symbolic="YES" id="rdA-Jw-sgs"/>
+                            <constraint firstItem="COX-jS-TON" firstAttribute="top" secondItem="yj5-cX-tDx" secondAttribute="bottom" constant="8" symbolic="YES" id="tWS-2G-Ohf"/>
                             <constraint firstItem="tt4-Bi-ao1" firstAttribute="trailing" secondItem="yj5-cX-tDx" secondAttribute="trailing" id="uYl-db-v4h"/>
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="tt4-Bi-ao1"/>

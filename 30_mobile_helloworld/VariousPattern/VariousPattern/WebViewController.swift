@@ -20,7 +20,6 @@ class WebViewController: UIViewController {
         updateView()
     }
     
-    
     func initView() {
         let settings = UserDefaults.standard
         settings.register(defaults: ["siteUrl": "http://www.google.com"])

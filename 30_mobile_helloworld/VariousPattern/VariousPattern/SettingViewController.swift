@@ -18,7 +18,7 @@ class SettingViewController: UIViewController {
 
         // Do any additional setup after loading the view.
     }
-    
+
     @IBOutlet weak var siteUrl: UITextField!
     
     @IBAction func saveAction(_ sender: Any) {

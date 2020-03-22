@@ -78,6 +78,21 @@ class ListActionViewController: UIViewController {
         NewRelic.crashNow("I'm about to be crashed by program")
     }
     
+    
+    @IBAction func handleRaiseError(_ sender: Any) throws {
+        updateLabel(message: "Error raised")
+        //do {
+            try throwError()
+        //} catch {
+            //NewRelic.error
+            //NewRelic.
+        //}
+    }
+    
+    func throwError() throws {
+        throw NSError(domain: "This is intended error", code: -1, userInfo: nil)
+    }
+    
     func updateLabel(message: String) {
         messageLabel.text = message
     }

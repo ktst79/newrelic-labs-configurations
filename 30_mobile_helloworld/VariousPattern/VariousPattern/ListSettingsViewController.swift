@@ -12,7 +12,7 @@ class ListSettingsViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-
+        
         let settings = UserDefaults.standard
         requestURL.text = settings.string(forKey: "requestUrl")
         // Do any additional setup after loading the view.
