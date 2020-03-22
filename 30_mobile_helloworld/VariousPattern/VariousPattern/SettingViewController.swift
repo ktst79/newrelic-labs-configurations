@@ -12,7 +12,6 @@ class SettingViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-
         
         let settings = UserDefaults.standard
         siteUrl.text = settings.string(forKey: "siteUrl")

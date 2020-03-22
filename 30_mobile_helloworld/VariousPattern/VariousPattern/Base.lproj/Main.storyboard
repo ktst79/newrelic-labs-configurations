@@ -64,21 +64,41 @@
                                     <action selector="handleLongInteraction:" destination="eFe-9s-Vxn" eventType="touchUpInside" id="UKu-bv-rJ4"/>
                                 </connections>
                             </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="yj5-cX-tDx">
+                                <rect key="frame" x="0.0" y="276" width="414" height="41"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="24"/>
+                                <state key="normal" title="Crash"/>
+                                <connections>
+                                    <action selector="handleCrash:" destination="eFe-9s-Vxn" eventType="touchUpInside" id="sua-45-bP4"/>
+                                </connections>
+                            </button>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Take Action!!" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="jwV-uj-dQZ">
+                                <rect key="frame" x="0.0" y="784" width="414" height="29"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="24"/>
+                                <nil key="textColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
                         </subviews>
                         <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
                         <constraints>
                             <constraint firstItem="Sza-jt-UVa" firstAttribute="leading" secondItem="qO7-96-A4p" secondAttribute="leading" constant="20" symbolic="YES" id="0WY-YZ-DCd"/>
                             <constraint firstItem="tt4-Bi-ao1" firstAttribute="trailing" secondItem="Wug-Ib-S1G" secondAttribute="trailing" id="2DG-QW-LlP"/>
                             <constraint firstItem="Sza-jt-UVa" firstAttribute="top" secondItem="alE-4u-cMA" secondAttribute="bottom" constant="8" symbolic="YES" id="CHk-h5-GJx"/>
+                            <constraint firstItem="tt4-Bi-ao1" firstAttribute="bottom" secondItem="jwV-uj-dQZ" secondAttribute="bottom" id="D5U-jp-4Qd"/>
+                            <constraint firstItem="tt4-Bi-ao1" firstAttribute="trailing" secondItem="jwV-uj-dQZ" secondAttribute="trailing" id="D8O-cK-qk3"/>
                             <constraint firstItem="Wug-Ib-S1G" firstAttribute="leading" secondItem="qO7-96-A4p" secondAttribute="leading" constant="20" symbolic="YES" id="EhQ-Iv-NKt"/>
+                            <constraint firstItem="jwV-uj-dQZ" firstAttribute="leading" secondItem="tt4-Bi-ao1" secondAttribute="leading" id="Fcb-93-nGB"/>
                             <constraint firstItem="tt4-Bi-ao1" firstAttribute="trailing" secondItem="alE-4u-cMA" secondAttribute="trailing" id="Jpf-XI-ssi"/>
+                            <constraint firstItem="yj5-cX-tDx" firstAttribute="top" secondItem="Sza-jt-UVa" secondAttribute="bottom" id="LbI-fq-eNg"/>
                             <constraint firstItem="Xpg-Gi-Diy" firstAttribute="top" secondItem="Wug-Ib-S1G" secondAttribute="bottom" constant="8" symbolic="YES" id="Oci-Q4-M1g"/>
+                            <constraint firstItem="yj5-cX-tDx" firstAttribute="leading" secondItem="tt4-Bi-ao1" secondAttribute="leading" id="a7S-7H-e97"/>
                             <constraint firstItem="alE-4u-cMA" firstAttribute="top" secondItem="Xpg-Gi-Diy" secondAttribute="bottom" constant="8" symbolic="YES" id="eFW-7s-ItW"/>
                             <constraint firstItem="Wug-Ib-S1G" firstAttribute="top" secondItem="tt4-Bi-ao1" secondAttribute="top" id="hmv-w2-Mk9"/>
                             <constraint firstItem="tt4-Bi-ao1" firstAttribute="trailing" secondItem="Xpg-Gi-Diy" secondAttribute="trailing" id="iF8-Vh-6kE"/>
                             <constraint firstItem="Xpg-Gi-Diy" firstAttribute="leading" secondItem="qO7-96-A4p" secondAttribute="leading" constant="20" symbolic="YES" id="iZf-OD-PRd"/>
                             <constraint firstItem="tt4-Bi-ao1" firstAttribute="trailing" secondItem="Sza-jt-UVa" secondAttribute="trailing" id="qZD-eP-RXc"/>
                             <constraint firstItem="alE-4u-cMA" firstAttribute="leading" secondItem="qO7-96-A4p" secondAttribute="leading" constant="20" symbolic="YES" id="rdA-Jw-sgs"/>
+                            <constraint firstItem="tt4-Bi-ao1" firstAttribute="trailing" secondItem="yj5-cX-tDx" secondAttribute="trailing" id="uYl-db-v4h"/>
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="tt4-Bi-ao1"/>
                     </view>
@@ -90,12 +110,13 @@
                         </barButtonItem>
                     </navigationItem>
                     <connections>
+                        <outlet property="messageLabel" destination="jwV-uj-dQZ" id="cWF-pN-7uN"/>
                         <segue destination="IWS-KH-pfS" kind="show" identifier="goListSetting" id="LJG-cf-Kaq"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="J9H-Hf-zX0" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="374" y="909"/>
+            <point key="canvasLocation" x="373.91304347826087" y="908.70535714285711"/>
         </scene>
         <!--List Settings View Controller-->
         <scene sceneID="Vg7-fC-rFR">
@@ -104,7 +125,28 @@
                     <view key="view" contentMode="scaleToFill" id="dFo-qV-NSB">
                         <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Request URL" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="dfi-Q4-F9L">
+                                <rect key="frame" x="0.0" y="88" width="414" height="21"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <nil key="textColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <textField opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="hLa-lM-ngd">
+                                <rect key="frame" x="0.0" y="109" width="414" height="34"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                <textInputTraits key="textInputTraits"/>
+                            </textField>
+                        </subviews>
                         <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
+                        <constraints>
+                            <constraint firstItem="RVf-k3-ow3" firstAttribute="trailing" secondItem="dfi-Q4-F9L" secondAttribute="trailing" id="Qgh-lN-FBd"/>
+                            <constraint firstItem="dfi-Q4-F9L" firstAttribute="top" secondItem="RVf-k3-ow3" secondAttribute="top" id="SfF-jD-lrn"/>
+                            <constraint firstItem="hLa-lM-ngd" firstAttribute="leading" secondItem="RVf-k3-ow3" secondAttribute="leading" id="WVc-B8-4Ds"/>
+                            <constraint firstItem="RVf-k3-ow3" firstAttribute="trailing" secondItem="hLa-lM-ngd" secondAttribute="trailing" id="rLs-Bx-wka"/>
+                            <constraint firstItem="dfi-Q4-F9L" firstAttribute="leading" secondItem="RVf-k3-ow3" secondAttribute="leading" id="us6-5B-zgs"/>
+                            <constraint firstItem="hLa-lM-ngd" firstAttribute="top" secondItem="dfi-Q4-F9L" secondAttribute="bottom" id="zcj-J2-WUf"/>
+                        </constraints>
                         <viewLayoutGuide key="safeArea" id="RVf-k3-ow3"/>
                     </view>
                     <navigationItem key="navigationItem" id="pcq-ma-D6L">
@@ -121,6 +163,9 @@
                             </barButtonItem>
                         </rightBarButtonItems>
                     </navigationItem>
+                    <connections>
+                        <outlet property="requestURL" destination="hLa-lM-ngd" id="w6p-b7-Qr3"/>
+                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="NxW-J3-a8i" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>

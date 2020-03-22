@@ -13,12 +13,16 @@ class ListSettingsViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        let settings = UserDefaults.standard
+        requestURL.text = settings.string(forKey: "requestUrl")
         // Do any additional setup after loading the view.
     }
     
     @IBAction func handleSave(_ sender: Any) {
+        let settings = UserDefaults.standard
+        settings.set(requestURL.text, forKey: "requestUrl")
+
         self.backToMainView(sender)
-        
     }
     
     @IBAction func handleCancel(_ sender: Any) {
@@ -29,6 +33,10 @@ class ListSettingsViewController: UIViewController {
     func backToMainView(_ sender: Any) {
         _ = navigationController?.popViewController(animated: true)
     }
+    
+    @IBOutlet weak var requestURL: UITextField!
+    
+    
     
     /*
     // MARK: - Navigation
