@@ -71,7 +71,7 @@ if [ "${DELETE_APP}" != "" ] ; then
     cat resources/app_settings/service.yaml | envsubst | kubectl delte -f -
 
     #TODO Delete rds, cluster, vcp
-    
+
     # Disable New Relic Kubernetes Monitoring
     #cat resources/newrelic/newrelic-infrastructure-k8s-latest.yaml | envsubst | kubectl delete -f -
 
@@ -258,9 +258,9 @@ echo "Applying Service..."
 cat resources/app_settings/service.yaml | envsubst | kubectl apply -f -
 
 echo "Enabling New Relic Kubernetes Monitoring"
-curl -L --create-dirs -o target/kubernetes/kube-state-metrics-1.7.2.zip https://github.com/kubernetes/kube-state-metrics/archive/v1.7.2.zip
-unzip  -d target/kubernetes -o target/kubernetes/kube-state-metrics-1.7.2.zip
-kubectl apply -f target/kubernetes/kube-state-metrics-1.7.2/kubernetes
+curl -L --create-dirs -o target/kubernetes/kube-state-metrics.zip ${KUBE_STATE_METRICS_URL}
+unzip  -d target/kubernetes -o target/kubernetes/kube-state-metrics.zip
+kubectl apply -f target/kubernetes/kube-state-metrics/kubernetes
 
 kubectl get pods --all-namespaces | grep kube-state-metrics
 
