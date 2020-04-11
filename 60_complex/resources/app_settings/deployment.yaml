@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ${NR_APP_NAME}-deployment
+spec:
+  selector:
+    matchLabels:
+      app: ${NR_APP_NAME}
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: ${NR_APP_NAME}
+    spec:
+      containers:
+      - name: ${NR_APP_NAME}-web
+        image: ${REPOSITORY_URI_PATH}${NR_APP_NAME}-web
+        envFrom:
+        - configMapRef:
+            name: ${NR_APP_NAME}-config
+        ports:
+        - containerPort: 3000

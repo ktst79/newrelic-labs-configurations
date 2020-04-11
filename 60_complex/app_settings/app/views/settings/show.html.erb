@@ -1,0 +1,11 @@
+<p>
+    <strong>Key:</strong>
+    <%= @setting.key %>
+</p>
+
+<p>
+    <strong>URL:</strong>
+    <%= @setting.url %>
+</p>
+<%= link_to 'Back', settings_path %>
+<%= link_to 'Edit', edit_setting_path(@setting) %>

@@ -1,0 +1,102 @@
+AWSTemplateFormatVersion: 2010-09-09
+Parameters:
+  VpcId:
+    Type: 'AWS::EC2::VPC::Id'
+    Description: VpcId of your existing Virtual Private Cloud (VPC)
+    ConstraintDescription: must be the VPC Id of an existing Virtual Private Cloud.
+  VpcCidr:
+    Type: String
+    Description: Cidr
+  Subnets:
+    Type: String
+    Description: Subnet IDs of VPC
+  MySQLMajorVersionParam:
+    Type: String
+    Default: '5.7'
+    AllowedValues:
+      - '5.5'
+      - '5.6'
+      - '5.7'
+  MySQLMinorVersionParam:
+    Type: String
+    Default: '22'
+  DBInstanceClassParam:
+    Type: String
+    Default: db.t2.micro
+  DBInstanceStorageSizeParam:
+    Type: String
+    Default: '20'
+  DBInstanceStorageTypeParam:
+    Type: String
+    Default: gp2
+  DBNameParam:
+    Type: String
+    Default: db
+  DBMasterUserNameParam:
+    Type: String
+    Default: master
+    NoEcho: true
+    MinLength: 1
+    MaxLength: 16
+    AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*'
+    ConstraintDescription: must begin with a letter and contain only alphanumeric characters.
+  DBPasswordParam:
+    Default: password
+    NoEcho: true
+    Type: String
+    MinLength: 8
+    MaxLength: 41
+    AllowedPattern: '[a-zA-Z0-9]*'
+    ConstraintDescription: must contain only alphanumeric characters.
+  DBPortParam:
+    Default: 3306
+    Type: String
+Resources:
+  RDS:
+    Type: 'AWS::RDS::DBInstance'
+    Properties:
+      Engine: MySQL
+      EngineVersion: !Sub '${MySQLMajorVersionParam}.${MySQLMinorVersionParam}'
+      DBInstanceClass: !Ref DBInstanceClassParam
+      AllocatedStorage: !Ref DBInstanceStorageSizeParam
+      StorageType: !Ref DBInstanceStorageTypeParam
+      DBName: !Ref DBNameParam
+      MasterUsername: !Ref DBMasterUserNameParam
+      MasterUserPassword: !Ref DBPasswordParam
+      Port: !Ref DBPortParam
+      PubliclyAccessible: false
+      MultiAZ: false
+      AvailabilityZone: !Select
+        - 0
+        - Fn::GetAZs: !Ref AWS::Region
+      AutoMinorVersionUpgrade: false
+      VPCSecurityGroups:
+        - !Ref RDSSecurityGroup
+      DBSubnetGroupName: !Ref RDSSubnetGroup
+  RDSSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: Security Group for RDS
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: !Ref DBPortParam
+          ToPort: !Ref DBPortParam
+          CidrIp: !Ref VpcCidr
+  RDSSubnetGroup:
+    Type: 'AWS::RDS::DBSubnetGroup'
+    Properties:
+      SubnetIds: 
+        Fn::Split:
+          - ","
+          - !Ref Subnets
+      DBSubnetGroupDescription: Subnet Group for RDS
+Outputs:
+  DBSecurityGroup:
+    Description: SecurityGroup for RDS
+    Value: !Ref RDSSecurityGroup
+  DBDNSName:
+    Description: The hostname of the DB Server
+    Value: !GetAtt 
+      - RDS
+      - Endpoint.Address
