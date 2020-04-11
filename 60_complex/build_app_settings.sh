@@ -55,6 +55,7 @@ if [ "${NODE_TYPE}" = "" ] ; then
 fi
 
 export NR_APP_NAME=${NR_APP_NAME}
+export NR_LICENSEKEY=${NR_LICENSEKEY}
 
 echo ${DELETE_APP}
 
@@ -70,6 +71,9 @@ if [ "${DELETE_APP}" != "" ] ; then
     cat resources/app_settings/service.yaml | envsubst | kubectl delte -f -
 
     #TODO Delete rds, cluster, vcp
+    
+    # Disable New Relic Kubernetes Monitoring
+    #cat resources/newrelic/newrelic-infrastructure-k8s-latest.yaml | envsubst | kubectl delete -f -
 
     exit 0
 fi
@@ -169,7 +173,7 @@ export DB_SECURITYGROUP_ID=${DB_SECURITYGROUP_ID}
 export DB_HOST=${DB_HOST}
 
 ################ Create EKS Cluster ########################
-CLUSTER_NAME=${NR_APP_NAME}
+export CLUSTER_NAME=${NR_APP_NAME}
 eksctl get cluster ${CLUSTER_NAME} > /dev/null
 CLUSTER_EXIST=$?
 
@@ -252,3 +256,16 @@ echo "Applying Job.."
 cat resources/app_settings/job.yaml | envsubst | kubectl apply -f -
 echo "Applying Service..."
 cat resources/app_settings/service.yaml | envsubst | kubectl apply -f -
+
+echo "Enabling New Relic Kubernetes Monitoring"
+curl -L --create-dirs -o target/kubernetes/kube-state-metrics-1.7.2.zip https://github.com/kubernetes/kube-state-metrics/archive/v1.7.2.zip
+unzip  -d target/kubernetes -o target/kubernetes/kube-state-metrics-1.7.2.zip
+kubectl apply -f target/kubernetes/kube-state-metrics-1.7.2/kubernetes
+
+kubectl get pods --all-namespaces | grep kube-state-metrics
+
+echo "Create the daemon set"
+cat resources/newrelic/newrelic-infrastructure-k8s-latest.yaml | envsubst | kubectl create -f -
+kubectl get daemonsets
+
+
