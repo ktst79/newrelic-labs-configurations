@@ -5,19 +5,24 @@ cd ${DIR}
 
 . ./build_param_app_settings.sh
 
-while getopts p:d: OPT
+while getopts p:d OPT
 do
     case $OPT in
         # Check if parameters need to be retrieved from specified file or keep default file (build_param.sh)
         p) echo "Retrieving parameters from ${OPTARG}"
-           . $OPTARG
-           ;;
+            . $OPTARG
+            ;;
         # Check if parameters need to be retrieved from specified file or keep default file (build_param.sh)
-        d) echo "Delete something: 0) app, 1) app, kube cluster 2) app, kube cluster, rds  3) all"
-           DELETE_APP=$OPTARG
-           ;;
+        d) echo "Delete app"
+            DELETE=true
+            ;;
     esac
 done
+
+if [ "${NR_LICENSEKEY}" = "" ] ; then
+    echo 'NR_LICENSEKEY are not specified. Check build_param.sh'
+    exit 1
+fi
 
 if [ "${NR_APP_NAME}" = "" ] ; then
     echo 'NR_APP_NAME are not specified. Check build_param.sh'
@@ -29,8 +34,8 @@ if [ "${AWS_CF_VPC_STACK}" = "" ] ; then
     exit 1
 fi
 
-if [ "${AWS_CF_VPC_TEMPLATE}" = "" ] ; then
-    echo 'AWS_CF_VPC_TEMPLATE are not specified. Check build_param.sh'
+if [ "${CLUSTER_NAME}" = "" ] ; then
+    echo 'CLUSTER_NAME are not specified. Check build_param.sh'
     exit 1
 fi
 
@@ -44,78 +49,54 @@ if [ "${AWS_CF_RDS_TEMPLATE}" = "" ] ; then
     exit 1
 fi
 
-if [ "${DATA_PLANE}" = "" ] ; then
-    echo 'DATA_PLANE are not specified. Check build_param.sh'
+if [ "${DB_NAME}" = "" ] ; then
+    echo 'DB_NAME are not specified. Check build_param.sh'
     exit 1
 fi
 
-if [ "${NODE_TYPE}" = "" ] ; then
-    echo 'NODE_TYPE are not specified. Check build_param.sh'
+if [ "${DB_USER}" = "" ] ; then
+    echo 'DB_USER are not specified. Check build_param.sh'
     exit 1
 fi
 
-export NR_APP_NAME=${NR_APP_NAME}
+if [ "${DB_PASS}" = "" ] ; then
+    echo 'DB_PASS are not specified. Check build_param.sh'
+    exit 1
+fi
+
+if [ "${DB_PORT}" = "" ] ; then
+    echo 'DB_PORT are not specified. Check build_param.sh'
+    exit 1
+fi
+
+# Followings are needed to be environment variable to pass yaml
 export NR_LICENSEKEY=${NR_LICENSEKEY}
+export NR_APP_NAME=${NR_APP_NAME}
+export CLUSTER_NAME=${CLUSTER_NAME}
+export VR=${VR}
+export DB_NAME=${DB_NAME}
+export DB_PORT=${DB_PORT}
+export DB_USER=${DB_USER}
+export DB_PASS=${DB_PASS}
 
-echo ${DELETE_APP}
+if [ "${DELETE}" = "true" ] ; then
 
-if [ "${DELETE_APP}" != "" ] ; then
+    echo "Deleting app_settings..."
+    cat resources/app_settings/app_settings.yaml | envsubst | kubectl delete -f -
 
-    echo "Deleting ConfigMap..."
-    cat resources/app_settings/config.yaml | envsubst | kubectl delete -f -
-    echo "Deleting Pod..."
-    cat resources/app_settings/deployment.yaml | envsubst | kubectl delete -f -
-    echo "Deleting Job.."
-    cat resources/app_settings/job.yaml | envsubst | kubectl delete -f -
-    echo "Deleting Service..."
-    cat resources/app_settings/service.yaml | envsubst | kubectl delte -f -
-
-    #TODO Delete rds, cluster, vcp
-
-    # Disable New Relic Kubernetes Monitoring
-    #cat resources/newrelic/newrelic-infrastructure-k8s-latest.yaml | envsubst | kubectl delete -f -
+    echo "Deleting existing cloudformation stack. ${AWS_CF_RDS_STACK}"
+    aws cloudformation delete-stack --stack-name ${AWS_CF_RDS_STACK}
+    aws cloudformation wait stack-delete-complete --stack-name ${AWS_CF_RDS_STACK}
 
     exit 0
 fi
 
-################ Delete Existing Stacks ########################
-aws cloudformation describe-stacks --stack-name ${AWS_CF_VPC_STACK} > /dev/null
-IS_VPC_STACK=$?
-
-aws cloudformation describe-stacks --stack-name ${AWS_CF_RDS_STACK} > /dev/null
-IS_RDS_STACK=$?
-
-if [ "${AWS_CF_RDS_STACK}" = "0" ] &&  [ "${SKIP_IF_STACK_EXIST}" != "true" ] ; then
-    echo "Deleting existing cloudformation stack. ${AWS_CF_RDS_STACK}"
-    aws cloudformation delete-stack --stack-name ${AWS_CF_RDS_STACK}
-    aws cloudformation wait stack-delete-complete --stack-name ${AWS_CF_RDS_STACK}
-    IS_RDS_STACK=1
-fi
-
-
-if [ "${IS_VPC_STACK}" = "0" ] &&  [ "${SKIP_IF_STACK_EXIST}" != "true" ] ; then
-    echo "Deleting existing cloudformation stack. ${AWS_CF_VPC_STACK}"
-    aws cloudformation delete-stack --stack-name ${AWS_CF_VPC_STACK}
-    aws cloudformation wait stack-delete-complete --stack-name ${AWS_CF_VPC_STACK}
-    IS_VPC_STACK=1
-fi
-
-################ Create VPC ########################
-if [ "${IS_VPC_STACK}" != "0" ] ; then
-    echo "Creating cloudformation stack for VPC. ${AWS_CF_VPC_STACK}"
-    aws cloudformation create-stack --stack-name ${AWS_CF_VPC_STACK} \
-        --template-body file://${AWS_CF_VPC_TEMPLATE} \
-        --capabilities CAPABILITY_IAM
-
-    echo "Waiting compleation of cloudformation stack. ${AWS_CF_VPC_STACK}"
-    aws cloudformation wait stack-create-complete --stack-name ${AWS_CF_VPC_STACK}
-
-    echo "Cloudformation stack has been created. ${AWS_CF_VPC_STACK}"
-else
-    echo "Cloudformation stack already exists. ${AWS_CF_VPC_STACK}"
-fi
-
+################ Retrieve VPC Information ######################
 OUTPUTS=`aws cloudformation describe-stacks --stack-name ${AWS_CF_VPC_STACK}`
+if  [ "$?" != "0" ] ; then
+    echo "There is no stack, create stack first: ${AWS_CF_VPC_STACK}"
+    exit 0
+fi
 VPC_ID=`echo "${OUTPUTS}" | jq -r '.Stacks[0].Outputs[] | select(.OutputKey == "VPC") | .OutputValue'`
 PUB_SUBNETS=`echo "${OUTPUTS}" | jq -r '.Stacks[0].Outputs[] | select(.OutputKey == "SubnetsPublic") | .OutputValue'`
 PRI_SUBNETS=`echo "${OUTPUTS}" | jq -r '.Stacks[0].Outputs[] | select(.OutputKey == "SubnetsPrivate") | .OutputValue'`
@@ -128,19 +109,19 @@ echo "VPC CIDR: ${VPC_CIDR}"
 echo "PUB_SUBNETS: ${PUB_SUBNETS}"
 echo "PRI_SUBNETS: ${PRI_SUBNETS}"
 
-export VPC_ID=${VPC_ID}
-export PUB_SUBNETS=${PUB_SUBNETS}
-export PRI_SUBNETS=${PRI_SUBNETS}
-export SECURITYGROUPID=${SECURITYGROUPID}
+################ Delete Existing Stacks ########################
+aws cloudformation describe-stacks --stack-name ${AWS_CF_RDS_STACK} > /dev/null
+IS_RDS_STACK=$?
+if [ "${IS_RDS_STACK}" = "0" ] &&  [ "${SKIP_IF_STACK_EXIST}" != "true" ] ; then
+    echo "Deleting existing cloudformation stack. ${AWS_CF_RDS_STACK}"
+    aws cloudformation delete-stack --stack-name ${AWS_CF_RDS_STACK}
+    aws cloudformation wait stack-delete-complete --stack-name ${AWS_CF_RDS_STACK}
+    IS_RDS_STACK=1
+fi
 
 ################ Create RDS and Security Group ########################
-export DB_NAME=${DB_NAME}
-export DB_PORT=${DB_PORT}
-export DB_USER=${DB_USER}
-export DB_PASS=${DB_PASS}
-
 if [ "${IS_RDS_STACK}" != "0" ] ; then
-    echo "Creating cloudformation stack for VPC. ${AWS_CF_RDS_STACK}"
+    echo "Creating cloudformation stack for RDS. ${AWS_CF_RDS_STACK}"
     PRI_SUBNETS_ESCAPED=`echo ${PRI_SUBNETS} | sed -e s/,/\\\\\\\\,/g`
 
     aws cloudformation create-stack --stack-name ${AWS_CF_RDS_STACK} \
@@ -164,60 +145,14 @@ fi
 
 OUTPUTS=`aws cloudformation describe-stacks --stack-name ${AWS_CF_RDS_STACK}`
 DB_SECURITYGROUP_ID=`echo "${OUTPUTS}" | jq -r '.Stacks[0].Outputs[] | select(.OutputKey == "DBSecurityGroup") | .OutputValue'`
-DB_HOST=`echo "${OUTPUTS}" | jq -r '.Stacks[0].Outputs[] | select(.OutputKey == "DBDNSName") | .OutputValue'`
+export DB_HOST=`echo "${OUTPUTS}" | jq -r '.Stacks[0].Outputs[] | select(.OutputKey == "DBDNSName") | .OutputValue'`
 
 echo "DB_SECURITYGROUP_ID: ${DB_SECURITYGROUP_ID}"
 echo "DB_HOST: ${DB_HOST}"
 
-export DB_SECURITYGROUP_ID=${DB_SECURITYGROUP_ID}
-export DB_HOST=${DB_HOST}
-
-################ Create EKS Cluster ########################
-export CLUSTER_NAME=${NR_APP_NAME}
-eksctl get cluster ${CLUSTER_NAME} > /dev/null
-CLUSTER_EXIST=$?
-
-if [ "${CLUSTER_EXIST}" = "0" ] && [ "${SKIP_IF_CLUSTER_EXIST}" != "true" ] ; then
-    eksctl delete cluster --name ${CLUSTER_NAME} --wait
-    CLUSTER_EXIST=1
-fi
-
-if [ "${CLUSTER_EXIST}" != "0" ] ; then
-    if [ "${DATA_PLANE}" = "ec2" ] ; then
-        eksctl create cluster \
-            --name ${CLUSTER_NAME} \
-            --version 1.15 \
-            --node-type ${NODE_TYPE} \
-            --vpc-private-subnets ${PRI_SUBNETS} \
-            --vpc-public-subnets ${PUB_SUBNETS} \
-            --managed
-    else
-        eksctl create cluster \
-            --name ${CLUSTER_NAME} \
-            --version 1.15 \
-            --vpc-private-subnets ${PRI_SUBNETS} \
-            --vpc-public-subnets ${PUB_SUBNETS} \
-            --fargate
-    fi
-fi
-OUTPUTS=`aws eks describe-cluster --name ${CLUSTER_NAME}`
-echo $OUTPTUS
-#VPC_ID=`echo "${OUTPUTS}" | jq -r '.Stacks[0].Outputs[] | select(.OutputKey == "VpcId") | .OutputValue'`
-#PUB_SUBNET_A_ID=`echo "${OUTPUTS}" | jq -r '.Stacks[0].Outputs[] | select(.OutputKey == "PubSubnetAId") | .OutputValue'`
-#PUB_SUBNET_C_ID=`echo "${OUTPUTS}" | jq -r '.Stacks[0].Outputs[] | select(.OutputKey == "PubSubnetCId") | .OutputValue'`
-#PRI_SUBNET_A_ID=`echo "${OUTPUTS}" | jq -r '.Stacks[0].Outputs[] | select(.OutputKey == "PriSubnetAId") | .OutputValue'`
-#PRI_SUBNET_C_ID=`echo "${OUTPUTS}" | jq -r '.Stacks[0].Outputs[] | select(.OutputKey == "PriSubnetCId") | .OutputValue'`
-
-#exit 0
-
 ########## Building Images ################
-
-
-AWS_REGION=`aws configure get region`
-AWS_ACCOUNT_ID=`aws sts get-caller-identity --query 'Account' --output text`
-
-export AWS_REGION=${AWS_REGION}
-export AWS_ACCOUNT_ID=${AWS_ACCOUNT_ID}
+export AWS_REGION=`aws configure get region`
+export AWS_ACCOUNT_ID=`aws sts get-caller-identity --query 'Account' --output text`
 
 echo "Logging in AWS..."
 $(aws ecr get-login --no-include-email --region ${AWS_REGION})
@@ -238,34 +173,14 @@ do
     fi
 
     echo "Add tag for the image...: ${REPOSITORY_URI}"
-    docker tag ${REPOSITORY_NAME}:latest ${REPOSITORY_URI}:latest
+    docker tag ${REPOSITORY_NAME}:${VR} ${REPOSITORY_URI}:${VR}
 
     echo "Registering container image...: ${REPOSITORY_URI}"
-    docker push ${REPOSITORY_URI}:latest
+    docker push ${REPOSITORY_URI}:${VR}
 done
 
 REPOSITORY_URI_PATH=`echo "${REPOSITORY_URI}" | cut -d "/" -f1`
-REPOSITORY_URI_PATH="${REPOSITORY_URI_PATH}/"
-export REPOSITORY_URI_PATH=${REPOSITORY_URI_PATH}
+export REPOSITORY_URI_PATH="${REPOSITORY_URI_PATH}/"
 
-echo "Applying ConfigMap..."
-cat resources/app_settings/config.yaml | envsubst | kubectl apply -f -
-echo "Applying Pod..."
-cat resources/app_settings/deployment.yaml | envsubst | kubectl apply -f -
-echo "Applying Job.."
-cat resources/app_settings/job.yaml | envsubst | kubectl apply -f -
-echo "Applying Service..."
-cat resources/app_settings/service.yaml | envsubst | kubectl apply -f -
-
-echo "Enabling New Relic Kubernetes Monitoring"
-curl -L --create-dirs -o target/kubernetes/kube-state-metrics.zip ${KUBE_STATE_METRICS_URL}
-unzip  -d target/kubernetes -o target/kubernetes/kube-state-metrics.zip
-kubectl apply -f target/kubernetes/kube-state-metrics/kubernetes
-
-kubectl get pods --all-namespaces | grep kube-state-metrics
-
-echo "Create the daemon set"
-cat resources/newrelic/newrelic-infrastructure-k8s-latest.yaml | envsubst | kubectl create -f -
-kubectl get daemonsets
-
-
+echo "Deploying app_settings"
+cat resources/app_settings/app_settings.yaml | envsubst | kubectl apply -f -

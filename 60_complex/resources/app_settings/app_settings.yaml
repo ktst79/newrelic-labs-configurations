@@ -1,0 +1,65 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ${NR_APP_NAME}-config
+data:
+  DB_HOST: ${DB_HOST}
+  DB_NAME: ${DB_NAME}
+  DB_USER: ${DB_USER}
+  DB_PASS: ${DB_PASS}
+  NR_LICENSEKEY: ${NR_LICENSEKEY}
+  NR_APP_NAME: ${NR_APP_NAME}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ${NR_APP_NAME}-deployment
+spec:
+  selector:
+    matchLabels:
+      app: ${NR_APP_NAME}
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: ${NR_APP_NAME}
+    spec:
+      containers:
+      - name: ${NR_APP_NAME}-web
+        image: ${REPOSITORY_URI_PATH}${NR_APP_NAME}-web:${VR}
+        envFrom:
+        - configMapRef:
+            name: ${NR_APP_NAME}-config
+        ports:
+        - containerPort: 3000
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ${NR_APP_NAME}-initdb
+spec:
+  completions: 1
+  parallelism: 1
+  template:
+    spec:
+      containers:
+      - name: ${NR_APP_NAME}-initdb
+        image: ${REPOSITORY_URI_PATH}${NR_APP_NAME}-web:${VR}
+        envFrom:
+        - configMapRef:
+            name: ${NR_APP_NAME}-config
+        command: ["rails", "db:migrate:reset"]
+      restartPolicy: Never
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ${NR_APP_NAME}-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: ${NR_APP_NAME}
+  ports:
+  - protocol: TCP
+    port: 8080
+    targetPort: 3000

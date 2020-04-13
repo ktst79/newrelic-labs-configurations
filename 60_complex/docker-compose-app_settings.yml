@@ -4,7 +4,7 @@ services:
     build:
       context: .
       dockerfile: "./resources/app_settings/Dockerfile"
-    image: ${REPOSITORY_URI_PATH}${NR_APP_NAME}-web
+    image: ${REPOSITORY_URI_PATH}${NR_APP_NAME}-web:${VR}
     container_name: ${NR_APP_NAME}-web
     environment:
       DB_HOST: ${DB_HOST}

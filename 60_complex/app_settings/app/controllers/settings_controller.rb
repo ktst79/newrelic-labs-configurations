@@ -25,6 +25,13 @@ class SettingsController < ApplicationController
         @setting = Setting.find(params[:id])
     end
 
+    def update
+        @setting = Setting.find(params[:id])
+
+        @setting.update(setting_params)
+        redirect_to settings_path        
+    end
+
     def destroy
         @setting = Setting.find(params[:id])
         @setting.destroy
