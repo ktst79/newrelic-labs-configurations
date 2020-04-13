@@ -5,16 +5,17 @@ cd ${DIR}
 
 . ./build_param_app_settings.sh
 
-while getopts p:d OPT
+while getopts p:d: OPT
 do
+    echo $?
     case $OPT in
         # Check if parameters need to be retrieved from specified file or keep default file (build_param.sh)
         p) echo "Retrieving parameters from ${OPTARG}"
             . $OPTARG
             ;;
-        # Check if parameters need to be retrieved from specified file or keep default file (build_param.sh)
-        d) echo "Delete app"
-            DELETE=true
+        # Check if parameters need to be retrieved from specified file or keep default file (build_param.sh). 0) App only, 1) App + RDS
+        d) echo "Delete resources. 0) App only, 1) App + RDS: ${OPTARG}"
+            DELETE=$OPTARG
             ;;
     esac
 done
@@ -79,14 +80,17 @@ export DB_PORT=${DB_PORT}
 export DB_USER=${DB_USER}
 export DB_PASS=${DB_PASS}
 
-if [ "${DELETE}" = "true" ] ; then
+if [ "${DELETE}" != "" ] ; then
+    if [ "${DELETE}" = "0" ] || [ "${DELETE}" = "1" ] ; then
+        echo "Deleting app_settings..."
+        cat resources/app_settings/app_settings.yaml | envsubst | kubectl delete -f -
+    fi
 
-    echo "Deleting app_settings..."
-    cat resources/app_settings/app_settings.yaml | envsubst | kubectl delete -f -
-
-    echo "Deleting existing cloudformation stack. ${AWS_CF_RDS_STACK}"
-    aws cloudformation delete-stack --stack-name ${AWS_CF_RDS_STACK}
-    aws cloudformation wait stack-delete-complete --stack-name ${AWS_CF_RDS_STACK}
+    if [ "${DELETE}" = "1" ] ; then
+        echo "Deleting existing cloudformation stack. ${AWS_CF_RDS_STACK}"
+        aws cloudformation delete-stack --stack-name ${AWS_CF_RDS_STACK}
+        aws cloudformation wait stack-delete-complete --stack-name ${AWS_CF_RDS_STACK}
+    fi
 
     exit 0
 fi

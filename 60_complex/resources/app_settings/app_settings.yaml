@@ -9,6 +9,7 @@ data:
   DB_PASS: ${DB_PASS}
   NR_LICENSEKEY: ${NR_LICENSEKEY}
   NR_APP_NAME: ${NR_APP_NAME}
+  NEW_RELIC_DISTRIBUTED_TRACING_ENABLED: "true"
 ---
 apiVersion: apps/v1
 kind: Deployment
