@@ -88,7 +88,7 @@ fi
 aws cloudformation describe-stacks --stack-name ${AWS_CF_VPC_STACK} > /dev/null
 IS_VPC_STACK=$?
 
-if [ "${IS_VPC_STACK}" = "0" ] &&  [ "${SKIP_IF_STACK_EXIST}" != "true" ] ; then
+if [ "${IS_VPC_STACK}" = "0" ] &&  [ "${SKIP_IF_VPC_EXIST}" != "true" ] ; then
     echo "Deleting existing cloudformation stack. ${AWS_CF_VPC_STACK}"
     aws cloudformation delete-stack --stack-name ${AWS_CF_VPC_STACK}
     aws cloudformation wait stack-delete-complete --stack-name ${AWS_CF_VPC_STACK}
