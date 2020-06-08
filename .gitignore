@@ -6,3 +6,6 @@ target*
 *.bak
 *.local
 logs/
+
+
+Gemfile.lock
