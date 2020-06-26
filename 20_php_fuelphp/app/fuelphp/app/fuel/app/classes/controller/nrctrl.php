@@ -42,6 +42,19 @@ class Controller_Nrctrl extends Controller
     return $view;
   }
 
+  public function action_post(){
+    sleep(1);
+
+    $val1 = Input::post('hidden_key1', 'not_found_key1');
+    $val2 = Input::post('hidden_key2', 'not_found_key2');
+    $val3 = Input::post('hidden_key3', 'not_found_key3');
+    
+    $view = View::forge('nrview.php');
+    $view->set('comment', 'Post Params:' . $val1 . ', ' . $val2 . ', ' . $val3);
+    
+    return $view;
+  }
+
   public function donothing_inner1() {
     $this->donothing_inner2();
     sleep(1);

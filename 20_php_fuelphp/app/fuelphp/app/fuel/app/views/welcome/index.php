@@ -46,6 +46,12 @@
 				<li><a href="/nrctrl/function2">Function2</a></li>
 				<li><a href="/nrctrl/function3">Function3t</a></li>
 			</ul>
+			<form action="/nrctrl/post" method="post">
+				<input type="hidden" name="hidden_key1" value="hidden_value1"/>
+				<input type="hidden" name="hidden_key2" value="hidden_value2"/>
+				<input type="hidden" name="hidden_key3" value="hidden_value3"/>
+				<input type="submit" name="submit" value="送信" />
+			</form>
 		</div>
 		<div class="row">
 			<div class="col-md-4">
