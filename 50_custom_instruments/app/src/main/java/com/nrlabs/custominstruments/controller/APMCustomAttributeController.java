@@ -16,15 +16,15 @@ import org.springframework.web.bind.annotation.RequestMethod;
 public class APMCustomAttributeController {
 
     @RequestMapping("/apm_custom_attribute")
-    public String apm_custom_attribute(@RequestParam("name") String name) {
+    public String apm_custom_attribute(@RequestParam("name") String tenantId) {
         try {   
             Random rnd = new Random(System.currentTimeMillis());
-            Thread.sleep(1000 * rnd.nextInt(name.length()));
+            Thread.sleep(1000 * rnd.nextInt(tenantId.length()));
         } catch (Exception e) {
             throw new Error(e);
         }        
 
-        NewRelic.addCustomParameter("attr_name", name);
+        NewRelic.addCustomParameter("tenantId", tenantId);
 
         return "apm_custom_attribute";
     }

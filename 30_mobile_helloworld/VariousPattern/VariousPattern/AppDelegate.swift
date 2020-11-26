@@ -2,13 +2,12 @@
 //  AppDelegate.swift
 //  VariousPattern
 //
-//  Created by Kota Saito on 2020/03/22.
-//  Copyright © 2020 ktst79. All rights reserved.
+//  Created by Kota Saito on 2020/11/26.
 //
 
 import UIKit
 
-@UIApplicationMain
+@main
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
 
@@ -22,7 +21,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         }
 
         NewRelic.start(withApplicationToken:nrlic!)
-
+        
+        NewRelic.setMaxEventBufferTime(5)
+        
         return true
     }
 

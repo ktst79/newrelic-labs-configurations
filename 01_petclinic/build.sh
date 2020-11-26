@@ -65,11 +65,6 @@ if [ "${AWS_CF_TEMPLATE}" = "" ] ; then
     exit 1
 fi
 
-if [ "${AWS_AP_AMIID}" = "" ] ; then
-    echo 'AWS_AP_AMIID are not specified. Check build_param.sh'
-    exit 1
-fi
-
 if [ "${AWS_AP_INSTANCETYPE}" = "" ] ; then
     echo 'AWS_AP_INSTANCETYPE are not specified. Check build_param.sh'
     exit 1

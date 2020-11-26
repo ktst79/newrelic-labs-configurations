@@ -6,16 +6,6 @@ target 'VariousPattern' do
   use_frameworks!
 
   # Pods for VariousPattern
-  pod 'NewRelicAgent' #Latest
-  #pod 'NewRelicAgent', '5.14.2'
-
-  target 'VariousPatternTests' do
-    inherit! :search_paths
-    # Pods for testing
-  end
-
-  target 'VariousPatternUITests' do
-    # Pods for testing
-  end
+  pod 'NewRelicAgent'
 
 end

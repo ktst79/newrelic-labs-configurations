@@ -1,5 +1,5 @@
 PODS:
-  - NewRelicAgent (6.10.0)
+  - NewRelicAgent (7.2.0)
 
 DEPENDENCIES:
   - NewRelicAgent
@@ -9,8 +9,8 @@ SPEC REPOS:
     - NewRelicAgent
 
 SPEC CHECKSUMS:
-  NewRelicAgent: 6b1fd6338b8465010df263aa7e3e9c11f51e6aaa
+  NewRelicAgent: 079b54be9e79dabfecf2c630c8c57eae1c75c702
 
-PODFILE CHECKSUM: 02899e658c26ee6c43bc35dd8a6589d49801e3c6
+PODFILE CHECKSUM: af0e8a4930c0e07bd57df8ef1f93d8924025b834
 
-COCOAPODS: 1.8.4
+COCOAPODS: 1.10.0
